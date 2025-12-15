@@ -8,17 +8,108 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
-        .glass-dark { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .glass-light { background: rgba(0,0,0,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.1); }
+        body { font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
+        
+        .bg-gradient-dark { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%); }
+        .bg-gradient-light { background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #d4d4d4 100%); }
+        
+        .card-dark { 
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-light { 
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .sidebar-dark { 
+            background: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .sidebar-light { 
+            background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+            border-right: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .playlist-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .playlist-item:hover {
+            transform: translateX(4px);
+        }
+        
+        .song-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .song-item:hover {
+            transform: scale(1.01);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-track {
+            background: rgba(255, 255, 255, 0.3);
+            height: 4px;
+            border-radius: 2px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #1DB954;
+            cursor: pointer;
+            margin-top: -5px;
+        }
+        
         @media (max-width: 768px) {
             .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; width: 75%; max-width: 280px; z-index: 50; transition: left 0.3s; }
             .sidebar.open { left: 0; }
-            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 40; backdrop-filter: blur(4px); }
             .overlay.open { display: block; }
         }
     </style>
@@ -93,16 +184,13 @@
             const audioRef = useRef(null);
             const fileInputRef = useRef(null);
 
-            const bg = darkMode ? 'bg-black' : 'bg-gray-50';
-            const bgSec = darkMode ? 'bg-gray-900' : 'bg-white';
+            const bgMain = darkMode ? 'bg-gradient-dark' : 'bg-gradient-light';
+            const sidebar = darkMode ? 'sidebar-dark' : 'sidebar-light';
+            const card = darkMode ? 'card-dark' : 'card-light';
             const txt = darkMode ? 'text-white' : 'text-gray-900';
             const txtMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
-            const bdr = darkMode ? 'border-gray-800' : 'border-gray-200';
-            const glass = darkMode ? 'glass-dark' : 'glass-light';
 
-            useEffect(() => {
-                loadData();
-            }, []);
+            useEffect(() => { loadData(); }, []);
 
             const loadData = async () => {
                 try {
@@ -264,355 +352,172 @@
             );
 
             if (loading) {
-                return React.createElement('div', { className: `h-screen flex items-center justify-center ${bg} ${txt}` },
-                    React.createElement('div', { className: 'text-2xl' }, 'Loading...')
+                return React.createElement('div', { className: `h-screen flex items-center justify-center ${bgMain} ${txt}` },
+                    React.createElement('div', { className: 'text-center' },
+                        React.createElement('div', { className: 'text-3xl font-bold mb-2' }, 'Music Player'),
+                        React.createElement('div', { className: txtMuted }, 'Loading your library...')
+                    )
                 );
             }
 
-            return React.createElement('div', { className: `h-screen flex flex-col ${bg} ${txt}` },
+            return React.createElement('div', { className: `h-screen flex flex-col ${bgMain} ${txt}` },
                 React.createElement('div', { className: `overlay ${sidebarOpen ? 'open' : ''}`, onClick: () => setSidebarOpen(false) }),
 
                 React.createElement('div', { className: 'flex flex-1 overflow-hidden' },
                     // Sidebar
-                    React.createElement('div', { className: `sidebar ${sidebarOpen ? 'open' : ''} md:relative w-64 ${bgSec} p-4 flex flex-col gap-4 border-r ${bdr}` },
+                    React.createElement('div', { className: `sidebar ${sidebarOpen ? 'open' : ''} md:relative w-64 ${sidebar} p-6 flex flex-col gap-6` },
                         React.createElement('div', { className: 'flex items-center justify-between' },
-                            React.createElement('div', { className: 'text-2xl font-bold' }, '🎵 Music'),
+                            React.createElement('div', { className: 'text-2xl font-bold tracking-tight' }, 'Music'),
                             React.createElement('div', { className: 'flex gap-2' },
                                 React.createElement('button', {
                                     onClick: () => setDarkMode(!darkMode),
-                                    className: `p-2 rounded ${glass} hover:scale-110 transition`
-                                }, darkMode ? '☀️' : '🌙'),
+                                    className: `p-2.5 rounded-full ${card} hover:scale-110 transition-all duration-300 ${txt}`
+                                }, darkMode ? 
+                                    React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z' })
+                                    )
+                                    : 
+                                    React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z' })
+                                    )
+                                ),
                                 React.createElement('button', {
                                     onClick: () => setSidebarOpen(false),
-                                    className: 'md:hidden text-xl'
-                                }, '✕')
+                                    className: `md:hidden p-2.5 rounded-full ${card} hover:scale-110 transition-all duration-300`
+                                }, 
+                                    React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M6 18L18 6M6 6l12 12' })
+                                    )
+                                )
                             )
                         ),
 
                         React.createElement('button', {
                             onClick: createPlaylist,
-                            className: `px-4 py-2 rounded-full font-bold text-black hover:scale-105 transition`,
-                            style: { backgroundColor: PRIMARY }
-                        }, '➕ Create Playlist'),
+                            className: 'btn-primary px-6 py-3.5 rounded-full font-bold text-white text-center'
+                        }, 'Create Playlist'),
 
                         React.createElement('button', {
                             onClick: () => setShowModal('export'),
-                            className: `px-4 py-2 ${glass} rounded-full hover:scale-105 transition`
-                        }, '📤 Backup & Share'),
+                            className: `btn-secondary px-6 py-3.5 rounded-full font-semibold ${txt} text-center`
+                        }, 'Backup & Share'),
 
                         React.createElement('input', {
                             type: 'text',
-                            placeholder: 'Search...',
+                            placeholder: 'Search playlists...',
                             value: searchQuery,
                             onChange: (e) => setSearchQuery(e.target.value),
-                            className: `px-3 py-2 ${glass} rounded outline-none`
+                            className: `px-4 py-3 ${card} rounded-xl outline-none ${txt} placeholder-gray-500`
                         }),
 
                         React.createElement('div', { className: 'flex-1 overflow-y-auto scrollbar-hide' },
-                            React.createElement('div', { className: `text-xs ${txtMuted} mb-2 uppercase font-bold` }, 'Playlists'),
+                            React.createElement('div', { className: `text-xs ${txtMuted} mb-3 uppercase font-bold tracking-wider` }, 'Your Library'),
                             React.createElement('div', { className: 'space-y-2' },
                                 filtered.map(p => React.createElement('div', {
                                     key: p.id,
                                     onClick: () => { setActivePlaylist(p.id); setSidebarOpen(false); },
-                                    className: `p-3 rounded cursor-pointer transition group ${activePlaylist === p.id ? glass : 'hover:' + glass}`,
-                                    style: activePlaylist === p.id ? { borderLeft: `3px solid ${PRIMARY}` } : {}
+                                    className: `playlist-item p-4 rounded-xl cursor-pointer ${activePlaylist === p.id ? card : 'hover:bg-white hover:bg-opacity-5'}`,
+                                    style: activePlaylist === p.id ? { borderLeft: `4px solid ${PRIMARY}` } : {}
                                 },
-                                    React.createElement('div', { className: 'flex justify-between' },
+                                    React.createElement('div', { className: 'flex justify-between items-center' },
                                         React.createElement('div', { className: 'flex-1 min-w-0' },
                                             React.createElement('div', {
-                                                className: 'font-bold truncate',
+                                                className: 'font-bold truncate text-base',
                                                 style: activePlaylist === p.id ? { color: PRIMARY } : {}
                                             }, p.name),
-                                            React.createElement('div', { className: `text-xs ${txtMuted}` }, `${p.songs.length} songs`)
+                                            React.createElement('div', { className: `text-sm ${txtMuted} mt-0.5` }, `${p.songs.length} tracks`)
                                         ),
                                         React.createElement('button', {
                                             onClick: (e) => { e.stopPropagation(); setShowModal({ type: 'delete-playlist', id: p.id }); },
-                                            className: 'opacity-0 group-hover:opacity-100 hover:scale-125 transition'
-                                        }, '🗑️')
+                                            className: `opacity-0 group-hover:opacity-100 p-2 rounded-lg hover:bg-red-500 hover:bg-opacity-20 transition-all ${txtMuted} hover:text-red-400`
+                                        }, 
+                                            React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                                React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' })
+                                            )
+                                        )
                                     )
                                 ))
                             )
                         )
                     ),
 
-                    // Main
-                    React.createElement('div', { className: `flex-1 overflow-y-auto pb-32` },
-                        React.createElement('div', { className: `md:hidden sticky top-0 ${bgSec} p-4 flex items-center gap-4 border-b ${bdr}` },
-                            React.createElement('button', { onClick: () => setSidebarOpen(true), className: 'text-2xl' }, '☰'),
-                            React.createElement('div', { className: 'flex-1 font-bold' }, current?.name || 'Music Player')
+                    // Main Content
+                    React.createElement('div', { className: 'flex-1 overflow-y-auto pb-32' },
+                        React.createElement('div', { className: `md:hidden sticky top-0 ${card} backdrop-blur-xl p-4 flex items-center gap-4 z-10` },
+                            React.createElement('button', { 
+                                onClick: () => setSidebarOpen(true),
+                                className: `p-2 rounded-lg ${card}`
+                            }, 
+                                React.createElement('svg', { className: 'w-6 h-6', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                    React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M4 6h16M4 12h16M4 18h16' })
+                                )
+                            ),
+                            React.createElement('div', { className: 'flex-1 font-bold text-lg' }, current?.name || 'Music Player')
                         ),
 
-                        current ? React.createElement('div', { className: 'p-6' },
-                            React.createElement('div', { className: 'mb-6' },
-                                React.createElement('div', { className: 'flex items-end gap-4' },
+                        current ? React.createElement('div', { className: 'p-6 md:p-10' },
+                            React.createElement('div', { className: 'mb-10' },
+                                React.createElement('div', { className: 'flex flex-col md:flex-row items-start md:items-end gap-6' },
                                     React.createElement('div', {
-                                        className: `w-32 h-32 md:w-48 md:h-48 rounded ${glass} flex items-center justify-center text-5xl`,
-                                        style: { backgroundColor: PRIMARY + '30' }
-                                    }, '🎵'),
-                                    React.createElement('div', {},
-                                        React.createElement('div', { className: `text-xs ${txtMuted} uppercase mb-1` }, 'Playlist'),
-                                        React.createElement('h1', { className: 'text-3xl md:text-5xl font-bold mb-2' }, current.name),
-                                        React.createElement('div', { className: txtMuted }, `${current.songs.length} songs`)
+                                        className: `w-56 h-56 rounded-2xl ${card} flex items-center justify-center shadow-2xl`,
+                                        style: { 
+                                            background: `linear-gradient(135deg, ${PRIMARY}40 0%, ${PRIMARY}20 100%)`
+                                        }
+                                    },
+                                        React.createElement('svg', { className: 'w-24 h-24 opacity-60', fill: 'currentColor', viewBox: '0 0 20 20' },
+                                            React.createElement('path', { d: 'M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z' })
+                                        )
+                                    ),
+                                    React.createElement('div', { className: 'flex-1' },
+                                        React.createElement('div', { className: `text-sm ${txtMuted} uppercase mb-2 font-bold tracking-wider` }, 'Playlist'),
+                                        React.createElement('h1', { className: 'text-4xl md:text-6xl lg:text-7xl font-black mb-4 tracking-tight' }, current.name),
+                                        React.createElement('div', { className: `text-base ${txtMuted} font-medium` }, `${current.songs.length} tracks`)
                                     )
                                 )
                             ),
 
-                            React.createElement('div', { className: 'flex gap-3 mb-6' },
+                            React.createElement('div', { className: 'flex flex-wrap gap-4 mb-8' },
                                 React.createElement('button', {
                                     onClick: () => fileInputRef.current?.click(),
-                                    className: 'px-6 py-3 rounded-full font-bold text-black hover:scale-105 transition',
-                                    style: { backgroundColor: PRIMARY }
-                                }, '📁 Upload'),
+                                    className: 'btn-primary px-8 py-4 rounded-full font-bold text-white flex items-center gap-3'
+                                }, 
+                                    React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' })
+                                    ),
+                                    'Upload Files'
+                                ),
                                 React.createElement('button', {
                                     onClick: () => { setModalInput(''); setShowModal('url'); },
-                                    className: `px-6 py-3 rounded-full font-bold ${glass} hover:scale-105 transition`
-                                }, '🔗 Add URL')
+                                    className: `btn-secondary px-8 py-4 rounded-full font-bold ${txt} flex items-center gap-3`
+                                }, 
+                                    React.createElement('svg', { className: 'w-5 h-5', fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' },
+                                        React.createElement('path', { strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: 2, d: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1' })
+                                    ),
+                                    'Add URL'
+                                )
                             ),
 
                             current.songs.length > 0 ? React.createElement('div', { className: 'space-y-2' },
                                 current.songs.map((s, i) => React.createElement('div', {
                                     key: s.id,
                                     onClick: () => playSong(s, current.id),
-                                    className: `p-3 rounded ${glass} cursor-pointer group hover:scale-[1.01] transition ${currentSong?.id === s.id ? 'ring-2' : ''}`,
-                                    style: currentSong?.id === s.id ? { ringColor: PRIMARY } : {}
+                                    className: `song-item group p-4 rounded-xl ${card} cursor-pointer ${currentSong?.id === s.id ? 'ring-2' : ''}`,
+                                    style: currentSong?.id === s.id ? { ringColor: PRIMARY, backgroundColor: `${PRIMARY}15` } : {}
                                 },
-                                    React.createElement('div', { className: 'flex items-center gap-3' },
-                                        React.createElement('div', { className: `text-sm ${txtMuted} w-8` },
-                                            currentSong?.id === s.id && isPlaying ? React.createElement('span', { style: { color: PRIMARY } }, '♪') : i + 1
+                                    React.createElement('div', { className: 'flex items-center gap-4' },
+                                        React.createElement('div', { 
+                                            className: `flex items-center justify-center w-10 h-10 rounded-lg font-bold`,
+                                            style: currentSong?.id === s.id && isPlaying ? { backgroundColor: PRIMARY, color: '#fff' } : { backgroundColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }
+                                        },
+                                            currentSong?.id === s.id && isPlaying ? 
+                                                React.createElement('svg', { className: 'w-4 h-4', fill: 'currentColor', viewBox: '0 0 20 20' },
+                                                    React.createElement('path', { d: 'M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z' })
+                                                )
+                                                : i + 1
                                         ),
                                         React.createElement('div', { className: 'flex-1 min-w-0' },
                                             React.createElement('div', {
-                                                className: 'font-bold truncate',
+                                                className: 'font-bold truncate text-base',
                                                 style: currentSong?.id === s.id ? { color: PRIMARY } : {}
                                             }, s.name),
-                                            React.createElement('div', { className: `text-xs ${txtMuted}` }, s.isUrl ? '🌐 URL' : '💾 Local')
-                                        ),
-                                        React.createElement('button', {
-                                            onClick: (e) => { e.stopPropagation(); setShowModal({ type: 'delete-song', id: s.id, pid: current.id }); },
-                                            className: 'opacity-0 group-hover:opacity-100 hover:scale-125 transition'
-                                        }, '🗑️')
-                                    )
-                                ))
-                            ) : React.createElement('div', { className: `text-center py-20 ${txtMuted}` },
-                                React.createElement('div', { className: 'text-6xl mb-4' }, '🎵'),
-                                React.createElement('div', { className: 'text-xl' }, 'No songs yet'),
-                                React.createElement('div', {}, 'Upload or add URLs')
-                            )
-                        ) : React.createElement('div', { className: `flex items-center justify-center h-full ${txtMuted}` },
-                            React.createElement('div', { className: 'text-center' },
-                                React.createElement('div', { className: 'text-6xl mb-4' }, '🎵'),
-                                React.createElement('div', { className: 'text-2xl mb-4' }, 'Welcome'),
-                                React.createElement('button', {
-                                    onClick: createPlaylist,
-                                    className: 'px-6 py-3 rounded-full font-bold text-black hover:scale-105 transition',
-                                    style: { backgroundColor: PRIMARY }
-                                }, '➕ Create Playlist')
-                            )
-                        )
-                    )
-                ),
-
-                // Modals
-                showModal === 'create' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
-                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
-                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Create Playlist'),
-                        React.createElement('input', {
-                            type: 'text',
-                            value: modalInput,
-                            onChange: (e) => setModalInput(e.target.value),
-                            placeholder: 'Playlist name',
-                            className: `w-full px-4 py-3 ${glass} rounded outline-none mb-4`,
-                            onKeyPress: (e) => e.key === 'Enter' && handleCreate(),
-                            autoFocus: true
-                        }),
-                        React.createElement('div', { className: 'flex gap-3 justify-end' },
-                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
-                            React.createElement('button', {
-                                onClick: handleCreate,
-                                className: 'px-6 py-3 rounded-full font-bold text-black',
-                                style: { backgroundColor: PRIMARY }
-                            }, 'Create')
-                        )
-                    )
-                ),
-
-                showModal === 'url' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
-                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
-                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Add URL'),
-                        React.createElement('input', {
-                            type: 'text',
-                            value: modalInput,
-                            onChange: (e) => setModalInput(e.target.value),
-                            placeholder: 'https://example.com/song.mp3',
-                            className: `w-full px-4 py-3 ${glass} rounded outline-none mb-4`,
-                            onKeyPress: (e) => e.key === 'Enter' && handleUrlSubmit(),
-                            autoFocus: true
-                        }),
-                        React.createElement('div', { className: 'flex gap-3 justify-end' },
-                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
-                            React.createElement('button', {
-                                onClick: handleUrlSubmit,
-                                className: 'px-6 py-3 rounded-full font-bold text-black',
-                                style: { backgroundColor: PRIMARY }
-                            }, 'Add')
-                        )
-                    )
-                ),
-
-                showModal === 'export' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
-                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
-                        React.createElement('h2', { className: 'text-2xl font-bold mb-6' }, 'Backup & Share'),
-                        React.createElement('div', { className: 'space-y-4' },
-                            React.createElement('button', {
-                                onClick: () => { exportData(); setShowModal(null); },
-                                className: 'w-full px-4 py-3 rounded-full font-bold text-black',
-                                style: { backgroundColor: PRIMARY }
-                            }, '📤 Export Playlists'),
-                            React.createElement('input', { type: 'file', accept: '.json', onChange: importData, className: 'hidden', id: 'imp' }),
-                            React.createElement('label', {
-                                htmlFor: 'imp',
-                                className: `block w-full px-4 py-3 rounded-full font-bold ${glass} text-center cursor-pointer`
-                            }, '📥 Import Playlists')
-                        ),
-                        React.createElement('button', { onClick: () => setShowModal(null), className: `w-full mt-4 ${txtMuted}` }, 'Close')
-                    )
-                ),
-
-                showModal?.type === 'delete-playlist' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
-                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
-                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Delete Playlist?'),
-                        React.createElement('p', { className: txtMuted + ' mb-6' }, 'This will delete all songs'),
-                        React.createElement('div', { className: 'flex gap-3 justify-end' },
-                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
-                            React.createElement('button', {
-                                onClick: () => deleteItem('playlist', showModal.id),
-                                className: 'px-6 py-3 bg-red-600 rounded-full font-bold'
-                            }, 'Delete')
-                        )
-                    )
-                ),
-
-                showModal?.type === 'delete-song' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
-                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
-                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Delete Song?'),
-                        React.createElement('div', { className: 'flex gap-3 justify-end' },
-                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
-                            React.createElement('button', {
-                                onClick: () => deleteItem('song', showModal.id, showModal.pid),
-                                className: 'px-6 py-3 bg-red-600 rounded-full font-bold'
-                            }, 'Delete')
-                        )
-                    )
-                ),
-
-                // Player
-                currentSong && React.createElement('div', { className: `fixed bottom-0 left-0 right-0 ${glass} ${bgSec} border-t ${bdr} p-3 z-30` },
-                    React.createElement('div', { className: 'flex flex-col gap-2' },
-                        React.createElement('div', { className: 'flex items-center justify-between gap-4' },
-                            React.createElement('div', { className: 'flex items-center gap-3 flex-1 min-w-0' },
-                                React.createElement('div', {
-                                    className: 'w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0',
-                                    style: { backgroundColor: PRIMARY }
-                                }, '🎵'),
-                                React.createElement('div', { className: 'min-w-0 hidden md:block' },
-                                    React.createElement('div', { className: 'font-bold truncate text-sm' }, currentSong.name),
-                                    React.createElement('div', { className: `text-xs ${txtMuted} truncate` }, current?.name)
-                                )
-                            ),
-                            React.createElement('div', { className: 'flex items-center gap-3' },
-                                React.createElement('button', {
-                                    onClick: () => setIsPlaying(!isPlaying),
-                                    className: 'w-10 h-10 bg-white rounded-full flex items-center justify-center text-black hover:scale-110 transition'
-                                }, isPlaying ? '⏸️' : '▶️'),
-                                React.createElement('button', {
-                                    onClick: () => setRepeat(!repeat),
-                                    className: `p-2`,
-                                    style: repeat ? { color: PRIMARY } : { color: txtMuted.includes('400') ? '#9CA3AF' : '#6B7280' }
-                                }, '🔂')
-                            ),
-                            React.createElement('div', { className: 'hidden md:flex items-center gap-2' },
-                                React.createElement('span', {}, volume > 50 ? '🔊' : volume > 0 ? '🔉' : '🔇'),
-                                React.createElement('input', {
-                                    type: 'range',
-                                    min: '0',
-                                    max: '100',
-                                    value: volume,
-                                    onChange: (e) => setVolume(Number(e.target.value)),
-                                    className: 'w-24',
-                                    style: { accentColor: PRIMARY }
-                                })
-                            )
-                        ),
-                        React.createElement('div', { className: 'flex items-center gap-2' },
-                            React.createElement('span', { className: `text-xs ${txtMuted}` }, formatTime(audioRef.current?.currentTime || 0)),
-                            React.createElement('div', {
-                                className: 'flex-1 h-1 rounded-full cursor-pointer group',
-                                style: { backgroundColor: darkMode ? '#444' : '#ddd' },
-                                onClick: (e) => {
-                                    if (audioRef.current?.duration) {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const x = e.clientX - rect.left;
-                                        audioRef.current.currentTime = (x / rect.width) * audioRef.current.duration;
-                                    }
-                                }
-                            },
-                                React.createElement('div', {
-                                    className: 'h-full rounded-full relative',
-                                    style: { width: `${progress}%`, backgroundColor: PRIMARY }
-                                },
-                                    React.createElement('div', { className: 'absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100' })
-                                )
-                            ),
-                            React.createElement('span', { className: `text-xs ${txtMuted}` }, formatTime(audioRef.current?.duration || 0))
-                        ),
-                        React.createElement('div', { className: 'md:hidden text-center text-xs truncate' }, currentSong.name)
-                    )
-                ),
-
-                currentSong && React.createElement('audio', {
-                    ref: audioRef,
-                    onTimeUpdate: () => {
-                        if (audioRef.current?.duration) {
-                            setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100);
-                        }
-                    },
-                    onEnded: () => {
-                        if (repeat) {
-                            audioRef.current.currentTime = 0;
-                            setIsPlaying(true);
-                        } else {
-                            const p = playlists.find(x => x.id === currentSong.playlistId);
-                            if (p) {
-                                const idx = p.songs.findIndex(x => x.id === currentSong.id);
-                                if (idx < p.songs.length - 1) {
-                                    playSong(p.songs[idx + 1], currentSong.playlistId);
-                                } else {
-                                    setIsPlaying(false);
-                                }
-                            }
-                        }
-                    }
-                }),
-
-                React.createElement('input', {
-                    ref: fileInputRef,
-                    type: 'file',
-                    multiple: true,
-                    accept: 'audio/*',
-                    onChange: handleFileUpload,
-                    className: 'hidden'
-                })
-            );
-        }
-
-        try {
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(React.createElement(MusicPlayer));
-            console.log('Music Player loaded successfully!');
-        } catch (error) {
-            console.error('Error:', error);
-            document.getElementById('root').innerHTML = '<div class="p-8 text-red-500">Error: ' + error.message + '</div>';
-        }
-    </script>
-</body>
-</html>
+                                            React
