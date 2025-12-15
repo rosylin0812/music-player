@@ -3,61 +3,614 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1DB954">
     <title>Music Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
+        .glass-dark { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass-light { background: rgba(0,0,0,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.1); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; width: 75%; max-width: 280px; z-index: 50; transition: left 0.3s; }
+            .sidebar.open { left: 0; }
+            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+            .overlay.open { display: block; }
+        }
     </style>
 </head>
-<body class="bg-black text-white min-h-screen">
-    <div id="root">
-        <div class="flex items-center justify-center h-screen">
-            <div class="text-center">
-                <div class="text-6xl mb-4">🎵</div>
-                <div class="text-2xl">Loading Music Player...</div>
-            </div>
-        </div>
-    </div>
+<body>
+    <div id="root"></div>
 
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
     <script>
-        console.log('Script starting...');
-        console.log('React loaded:', typeof React);
-        console.log('ReactDOM loaded:', typeof ReactDOM);
-
         const { useState, useEffect, useRef } = React;
         const PRIMARY = '#1DB954';
 
-        function App() {
-            const [test, setTest] = useState('App is working!');
-            
-            return React.createElement('div', { 
-                className: 'p-8'
+        // IndexedDB
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('MusicDB', 1);
+                req.onerror = () => reject(req.error);
+                req.onsuccess = () => resolve(req.result);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('playlists')) db.createObjectStore('playlists', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('songs')) db.createObjectStore('songs', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+                };
+            });
+        };
+
+        const DB = {
+            async save(store, data) {
+                const db = await initDB();
+                const tx = db.transaction(store, 'readwrite');
+                tx.objectStore(store).put(data);
+                return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
             },
-                React.createElement('h1', { 
-                    className: 'text-4xl font-bold mb-4'
-                }, 'Music Player Test'),
-                React.createElement('p', { 
-                    className: 'text-xl mb-4'
-                }, test),
-                React.createElement('button', {
-                    onClick: () => setTest('Button clicked!'),
-                    className: 'px-6 py-3 rounded-full font-bold text-black',
-                    style: { backgroundColor: PRIMARY }
-                }, 'Test Button')
+            async get(store, key) {
+                const db = await initDB();
+                const tx = db.transaction(store, 'readonly');
+                const req = tx.objectStore(store).get(key);
+                return new Promise((res) => { req.onsuccess = () => res(req.result); });
+            },
+            async getAll(store) {
+                const db = await initDB();
+                const tx = db.transaction(store, 'readonly');
+                const req = tx.objectStore(store).getAll();
+                return new Promise((res) => { req.onsuccess = () => res(req.result || []); });
+            },
+            async delete(store, key) {
+                const db = await initDB();
+                const tx = db.transaction(store, 'readwrite');
+                tx.objectStore(store).delete(key);
+                return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
+            }
+        };
+
+        function MusicPlayer() {
+            const [playlists, setPlaylists] = useState([]);
+            const [activePlaylist, setActivePlaylist] = useState(null);
+            const [currentSong, setCurrentSong] = useState(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [repeat, setRepeat] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [volume, setVolume] = useState(80);
+            const [darkMode, setDarkMode] = useState(true);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [showModal, setShowModal] = useState(null);
+            const [modalInput, setModalInput] = useState('');
+            const [loading, setLoading] = useState(true);
+            
+            const audioRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            const bg = darkMode ? 'bg-black' : 'bg-gray-50';
+            const bgSec = darkMode ? 'bg-gray-900' : 'bg-white';
+            const txt = darkMode ? 'text-white' : 'text-gray-900';
+            const txtMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+            const bdr = darkMode ? 'border-gray-800' : 'border-gray-200';
+            const glass = darkMode ? 'glass-dark' : 'glass-light';
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = async () => {
+                try {
+                    const [lists, mode, vol] = await Promise.all([
+                        DB.getAll('playlists'),
+                        DB.get('settings', 'darkMode'),
+                        DB.get('settings', 'volume')
+                    ]);
+                    if (lists) setPlaylists(lists);
+                    if (mode) setDarkMode(mode.value);
+                    if (vol) setVolume(vol.value);
+                } catch (e) {
+                    console.error('Load error:', e);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            useEffect(() => {
+                if (!loading) playlists.forEach(p => DB.save('playlists', p));
+            }, [playlists, loading]);
+
+            useEffect(() => {
+                if (!loading) DB.save('settings', { key: 'darkMode', value: darkMode });
+            }, [darkMode, loading]);
+
+            useEffect(() => {
+                if (!loading) DB.save('settings', { key: 'volume', value: volume });
+            }, [volume, loading]);
+
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    audioRef.current.src = currentSong.url;
+                    audioRef.current.load();
+                    if (isPlaying) audioRef.current.play().catch(() => setIsPlaying(false));
+                }
+            }, [currentSong]);
+
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    if (isPlaying) audioRef.current.play().catch(() => setIsPlaying(false));
+                    else audioRef.current.pause();
+                }
+            }, [isPlaying]);
+
+            useEffect(() => {
+                if (audioRef.current) audioRef.current.volume = volume / 100;
+            }, [volume]);
+
+            const createPlaylist = () => {
+                setModalInput('');
+                setShowModal('create');
+            };
+
+            const handleCreate = () => {
+                if (modalInput.trim()) {
+                    setPlaylists([...playlists, { id: Date.now(), name: modalInput.trim(), songs: [] }]);
+                    setActivePlaylist(Date.now());
+                    setShowModal(null);
+                    setSidebarOpen(false);
+                }
+            };
+
+            const handleFileUpload = async (e) => {
+                if (!activePlaylist) return alert('Select a playlist first');
+                const files = Array.from(e.target.files);
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (!playlist) return;
+
+                for (const file of files) {
+                    const id = Date.now() + Math.random();
+                    const song = { id, name: file.name.replace(/\.[^/.]+$/, ''), isUrl: false };
+                    await DB.save('songs', { id, blob: file });
+                    playlist.songs.push(song);
+                }
+                setPlaylists([...playlists]);
+            };
+
+            const handleUrlSubmit = () => {
+                if (!modalInput.trim() || !activePlaylist) return;
+                try { new URL(modalInput); } catch { return alert('Invalid URL'); }
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (!playlist) return;
+                playlist.songs.push({
+                    id: Date.now() + Math.random(),
+                    name: modalInput.split('/').pop().split('?')[0] || 'Audio',
+                    url: modalInput,
+                    isUrl: true
+                });
+                setPlaylists([...playlists]);
+                setModalInput('');
+                setShowModal(null);
+            };
+
+            const playSong = async (song, pid) => {
+                if (song.isUrl) {
+                    setCurrentSong({ ...song, playlistId: pid });
+                } else {
+                    const data = await DB.get('songs', song.id);
+                    if (data?.blob) {
+                        setCurrentSong({ ...song, playlistId: pid, url: URL.createObjectURL(data.blob) });
+                    }
+                }
+                setIsPlaying(true);
+            };
+
+            const deleteItem = async (type, id, pid) => {
+                if (type === 'playlist') {
+                    const p = playlists.find(x => x.id === id);
+                    if (p) for (const s of p.songs) if (!s.isUrl) await DB.delete('songs', s.id);
+                    setPlaylists(playlists.filter(x => x.id !== id));
+                    if (activePlaylist === id) setActivePlaylist(null);
+                } else {
+                    const p = playlists.find(x => x.id === pid);
+                    if (p) {
+                        const s = p.songs.find(x => x.id === id);
+                        if (s && !s.isUrl) await DB.delete('songs', s.id);
+                        p.songs = p.songs.filter(x => x.id !== id);
+                        setPlaylists([...playlists]);
+                    }
+                }
+                setShowModal(null);
+            };
+
+            const exportData = () => {
+                const blob = new Blob([JSON.stringify(playlists, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `music-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const importData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (Array.isArray(data)) setPlaylists([...playlists, ...data]);
+                    } catch { alert('Invalid file'); }
+                };
+                reader.readAsText(file);
+            };
+
+            const formatTime = (s) => {
+                if (!s || isNaN(s)) return '0:00';
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return `${m}:${sec.toString().padStart(2, '0')}`;
+            };
+
+            const current = playlists.find(p => p.id === activePlaylist);
+            const filtered = playlists.filter(p => 
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.songs.some(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            );
+
+            if (loading) {
+                return React.createElement('div', { className: `h-screen flex items-center justify-center ${bg} ${txt}` },
+                    React.createElement('div', { className: 'text-2xl' }, 'Loading...')
+                );
+            }
+
+            return React.createElement('div', { className: `h-screen flex flex-col ${bg} ${txt}` },
+                React.createElement('div', { className: `overlay ${sidebarOpen ? 'open' : ''}`, onClick: () => setSidebarOpen(false) }),
+
+                React.createElement('div', { className: 'flex flex-1 overflow-hidden' },
+                    // Sidebar
+                    React.createElement('div', { className: `sidebar ${sidebarOpen ? 'open' : ''} md:relative w-64 ${bgSec} p-4 flex flex-col gap-4 border-r ${bdr}` },
+                        React.createElement('div', { className: 'flex items-center justify-between' },
+                            React.createElement('div', { className: 'text-2xl font-bold' }, '🎵 Music'),
+                            React.createElement('div', { className: 'flex gap-2' },
+                                React.createElement('button', {
+                                    onClick: () => setDarkMode(!darkMode),
+                                    className: `p-2 rounded ${glass} hover:scale-110 transition`
+                                }, darkMode ? '☀️' : '🌙'),
+                                React.createElement('button', {
+                                    onClick: () => setSidebarOpen(false),
+                                    className: 'md:hidden text-xl'
+                                }, '✕')
+                            )
+                        ),
+
+                        React.createElement('button', {
+                            onClick: createPlaylist,
+                            className: `px-4 py-2 rounded-full font-bold text-black hover:scale-105 transition`,
+                            style: { backgroundColor: PRIMARY }
+                        }, '➕ Create Playlist'),
+
+                        React.createElement('button', {
+                            onClick: () => setShowModal('export'),
+                            className: `px-4 py-2 ${glass} rounded-full hover:scale-105 transition`
+                        }, '📤 Backup & Share'),
+
+                        React.createElement('input', {
+                            type: 'text',
+                            placeholder: 'Search...',
+                            value: searchQuery,
+                            onChange: (e) => setSearchQuery(e.target.value),
+                            className: `px-3 py-2 ${glass} rounded outline-none`
+                        }),
+
+                        React.createElement('div', { className: 'flex-1 overflow-y-auto scrollbar-hide' },
+                            React.createElement('div', { className: `text-xs ${txtMuted} mb-2 uppercase font-bold` }, 'Playlists'),
+                            React.createElement('div', { className: 'space-y-2' },
+                                filtered.map(p => React.createElement('div', {
+                                    key: p.id,
+                                    onClick: () => { setActivePlaylist(p.id); setSidebarOpen(false); },
+                                    className: `p-3 rounded cursor-pointer transition group ${activePlaylist === p.id ? glass : 'hover:' + glass}`,
+                                    style: activePlaylist === p.id ? { borderLeft: `3px solid ${PRIMARY}` } : {}
+                                },
+                                    React.createElement('div', { className: 'flex justify-between' },
+                                        React.createElement('div', { className: 'flex-1 min-w-0' },
+                                            React.createElement('div', {
+                                                className: 'font-bold truncate',
+                                                style: activePlaylist === p.id ? { color: PRIMARY } : {}
+                                            }, p.name),
+                                            React.createElement('div', { className: `text-xs ${txtMuted}` }, `${p.songs.length} songs`)
+                                        ),
+                                        React.createElement('button', {
+                                            onClick: (e) => { e.stopPropagation(); setShowModal({ type: 'delete-playlist', id: p.id }); },
+                                            className: 'opacity-0 group-hover:opacity-100 hover:scale-125 transition'
+                                        }, '🗑️')
+                                    )
+                                ))
+                            )
+                        )
+                    ),
+
+                    // Main
+                    React.createElement('div', { className: `flex-1 overflow-y-auto pb-32` },
+                        React.createElement('div', { className: `md:hidden sticky top-0 ${bgSec} p-4 flex items-center gap-4 border-b ${bdr}` },
+                            React.createElement('button', { onClick: () => setSidebarOpen(true), className: 'text-2xl' }, '☰'),
+                            React.createElement('div', { className: 'flex-1 font-bold' }, current?.name || 'Music Player')
+                        ),
+
+                        current ? React.createElement('div', { className: 'p-6' },
+                            React.createElement('div', { className: 'mb-6' },
+                                React.createElement('div', { className: 'flex items-end gap-4' },
+                                    React.createElement('div', {
+                                        className: `w-32 h-32 md:w-48 md:h-48 rounded ${glass} flex items-center justify-center text-5xl`,
+                                        style: { backgroundColor: PRIMARY + '30' }
+                                    }, '🎵'),
+                                    React.createElement('div', {},
+                                        React.createElement('div', { className: `text-xs ${txtMuted} uppercase mb-1` }, 'Playlist'),
+                                        React.createElement('h1', { className: 'text-3xl md:text-5xl font-bold mb-2' }, current.name),
+                                        React.createElement('div', { className: txtMuted }, `${current.songs.length} songs`)
+                                    )
+                                )
+                            ),
+
+                            React.createElement('div', { className: 'flex gap-3 mb-6' },
+                                React.createElement('button', {
+                                    onClick: () => fileInputRef.current?.click(),
+                                    className: 'px-6 py-3 rounded-full font-bold text-black hover:scale-105 transition',
+                                    style: { backgroundColor: PRIMARY }
+                                }, '📁 Upload'),
+                                React.createElement('button', {
+                                    onClick: () => { setModalInput(''); setShowModal('url'); },
+                                    className: `px-6 py-3 rounded-full font-bold ${glass} hover:scale-105 transition`
+                                }, '🔗 Add URL')
+                            ),
+
+                            current.songs.length > 0 ? React.createElement('div', { className: 'space-y-2' },
+                                current.songs.map((s, i) => React.createElement('div', {
+                                    key: s.id,
+                                    onClick: () => playSong(s, current.id),
+                                    className: `p-3 rounded ${glass} cursor-pointer group hover:scale-[1.01] transition ${currentSong?.id === s.id ? 'ring-2' : ''}`,
+                                    style: currentSong?.id === s.id ? { ringColor: PRIMARY } : {}
+                                },
+                                    React.createElement('div', { className: 'flex items-center gap-3' },
+                                        React.createElement('div', { className: `text-sm ${txtMuted} w-8` },
+                                            currentSong?.id === s.id && isPlaying ? React.createElement('span', { style: { color: PRIMARY } }, '♪') : i + 1
+                                        ),
+                                        React.createElement('div', { className: 'flex-1 min-w-0' },
+                                            React.createElement('div', {
+                                                className: 'font-bold truncate',
+                                                style: currentSong?.id === s.id ? { color: PRIMARY } : {}
+                                            }, s.name),
+                                            React.createElement('div', { className: `text-xs ${txtMuted}` }, s.isUrl ? '🌐 URL' : '💾 Local')
+                                        ),
+                                        React.createElement('button', {
+                                            onClick: (e) => { e.stopPropagation(); setShowModal({ type: 'delete-song', id: s.id, pid: current.id }); },
+                                            className: 'opacity-0 group-hover:opacity-100 hover:scale-125 transition'
+                                        }, '🗑️')
+                                    )
+                                ))
+                            ) : React.createElement('div', { className: `text-center py-20 ${txtMuted}` },
+                                React.createElement('div', { className: 'text-6xl mb-4' }, '🎵'),
+                                React.createElement('div', { className: 'text-xl' }, 'No songs yet'),
+                                React.createElement('div', {}, 'Upload or add URLs')
+                            )
+                        ) : React.createElement('div', { className: `flex items-center justify-center h-full ${txtMuted}` },
+                            React.createElement('div', { className: 'text-center' },
+                                React.createElement('div', { className: 'text-6xl mb-4' }, '🎵'),
+                                React.createElement('div', { className: 'text-2xl mb-4' }, 'Welcome'),
+                                React.createElement('button', {
+                                    onClick: createPlaylist,
+                                    className: 'px-6 py-3 rounded-full font-bold text-black hover:scale-105 transition',
+                                    style: { backgroundColor: PRIMARY }
+                                }, '➕ Create Playlist')
+                            )
+                        )
+                    )
+                ),
+
+                // Modals
+                showModal === 'create' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
+                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
+                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Create Playlist'),
+                        React.createElement('input', {
+                            type: 'text',
+                            value: modalInput,
+                            onChange: (e) => setModalInput(e.target.value),
+                            placeholder: 'Playlist name',
+                            className: `w-full px-4 py-3 ${glass} rounded outline-none mb-4`,
+                            onKeyPress: (e) => e.key === 'Enter' && handleCreate(),
+                            autoFocus: true
+                        }),
+                        React.createElement('div', { className: 'flex gap-3 justify-end' },
+                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
+                            React.createElement('button', {
+                                onClick: handleCreate,
+                                className: 'px-6 py-3 rounded-full font-bold text-black',
+                                style: { backgroundColor: PRIMARY }
+                            }, 'Create')
+                        )
+                    )
+                ),
+
+                showModal === 'url' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
+                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
+                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Add URL'),
+                        React.createElement('input', {
+                            type: 'text',
+                            value: modalInput,
+                            onChange: (e) => setModalInput(e.target.value),
+                            placeholder: 'https://example.com/song.mp3',
+                            className: `w-full px-4 py-3 ${glass} rounded outline-none mb-4`,
+                            onKeyPress: (e) => e.key === 'Enter' && handleUrlSubmit(),
+                            autoFocus: true
+                        }),
+                        React.createElement('div', { className: 'flex gap-3 justify-end' },
+                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
+                            React.createElement('button', {
+                                onClick: handleUrlSubmit,
+                                className: 'px-6 py-3 rounded-full font-bold text-black',
+                                style: { backgroundColor: PRIMARY }
+                            }, 'Add')
+                        )
+                    )
+                ),
+
+                showModal === 'export' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
+                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
+                        React.createElement('h2', { className: 'text-2xl font-bold mb-6' }, 'Backup & Share'),
+                        React.createElement('div', { className: 'space-y-4' },
+                            React.createElement('button', {
+                                onClick: () => { exportData(); setShowModal(null); },
+                                className: 'w-full px-4 py-3 rounded-full font-bold text-black',
+                                style: { backgroundColor: PRIMARY }
+                            }, '📤 Export Playlists'),
+                            React.createElement('input', { type: 'file', accept: '.json', onChange: importData, className: 'hidden', id: 'imp' }),
+                            React.createElement('label', {
+                                htmlFor: 'imp',
+                                className: `block w-full px-4 py-3 rounded-full font-bold ${glass} text-center cursor-pointer`
+                            }, '📥 Import Playlists')
+                        ),
+                        React.createElement('button', { onClick: () => setShowModal(null), className: `w-full mt-4 ${txtMuted}` }, 'Close')
+                    )
+                ),
+
+                showModal?.type === 'delete-playlist' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
+                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
+                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Delete Playlist?'),
+                        React.createElement('p', { className: txtMuted + ' mb-6' }, 'This will delete all songs'),
+                        React.createElement('div', { className: 'flex gap-3 justify-end' },
+                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
+                            React.createElement('button', {
+                                onClick: () => deleteItem('playlist', showModal.id),
+                                className: 'px-6 py-3 bg-red-600 rounded-full font-bold'
+                            }, 'Delete')
+                        )
+                    )
+                ),
+
+                showModal?.type === 'delete-song' && React.createElement('div', { className: 'fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4' },
+                    React.createElement('div', { className: `${glass} ${bgSec} rounded-lg p-6 w-full max-w-md` },
+                        React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Delete Song?'),
+                        React.createElement('div', { className: 'flex gap-3 justify-end' },
+                            React.createElement('button', { onClick: () => setShowModal(null), className: txtMuted }, 'Cancel'),
+                            React.createElement('button', {
+                                onClick: () => deleteItem('song', showModal.id, showModal.pid),
+                                className: 'px-6 py-3 bg-red-600 rounded-full font-bold'
+                            }, 'Delete')
+                        )
+                    )
+                ),
+
+                // Player
+                currentSong && React.createElement('div', { className: `fixed bottom-0 left-0 right-0 ${glass} ${bgSec} border-t ${bdr} p-3 z-30` },
+                    React.createElement('div', { className: 'flex flex-col gap-2' },
+                        React.createElement('div', { className: 'flex items-center justify-between gap-4' },
+                            React.createElement('div', { className: 'flex items-center gap-3 flex-1 min-w-0' },
+                                React.createElement('div', {
+                                    className: 'w-12 h-12 rounded flex items-center justify-center text-2xl flex-shrink-0',
+                                    style: { backgroundColor: PRIMARY }
+                                }, '🎵'),
+                                React.createElement('div', { className: 'min-w-0 hidden md:block' },
+                                    React.createElement('div', { className: 'font-bold truncate text-sm' }, currentSong.name),
+                                    React.createElement('div', { className: `text-xs ${txtMuted} truncate` }, current?.name)
+                                )
+                            ),
+                            React.createElement('div', { className: 'flex items-center gap-3' },
+                                React.createElement('button', {
+                                    onClick: () => setIsPlaying(!isPlaying),
+                                    className: 'w-10 h-10 bg-white rounded-full flex items-center justify-center text-black hover:scale-110 transition'
+                                }, isPlaying ? '⏸️' : '▶️'),
+                                React.createElement('button', {
+                                    onClick: () => setRepeat(!repeat),
+                                    className: `p-2`,
+                                    style: repeat ? { color: PRIMARY } : { color: txtMuted.includes('400') ? '#9CA3AF' : '#6B7280' }
+                                }, '🔂')
+                            ),
+                            React.createElement('div', { className: 'hidden md:flex items-center gap-2' },
+                                React.createElement('span', {}, volume > 50 ? '🔊' : volume > 0 ? '🔉' : '🔇'),
+                                React.createElement('input', {
+                                    type: 'range',
+                                    min: '0',
+                                    max: '100',
+                                    value: volume,
+                                    onChange: (e) => setVolume(Number(e.target.value)),
+                                    className: 'w-24',
+                                    style: { accentColor: PRIMARY }
+                                })
+                            )
+                        ),
+                        React.createElement('div', { className: 'flex items-center gap-2' },
+                            React.createElement('span', { className: `text-xs ${txtMuted}` }, formatTime(audioRef.current?.currentTime || 0)),
+                            React.createElement('div', {
+                                className: 'flex-1 h-1 rounded-full cursor-pointer group',
+                                style: { backgroundColor: darkMode ? '#444' : '#ddd' },
+                                onClick: (e) => {
+                                    if (audioRef.current?.duration) {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const x = e.clientX - rect.left;
+                                        audioRef.current.currentTime = (x / rect.width) * audioRef.current.duration;
+                                    }
+                                }
+                            },
+                                React.createElement('div', {
+                                    className: 'h-full rounded-full relative',
+                                    style: { width: `${progress}%`, backgroundColor: PRIMARY }
+                                },
+                                    React.createElement('div', { className: 'absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100' })
+                                )
+                            ),
+                            React.createElement('span', { className: `text-xs ${txtMuted}` }, formatTime(audioRef.current?.duration || 0))
+                        ),
+                        React.createElement('div', { className: 'md:hidden text-center text-xs truncate' }, currentSong.name)
+                    )
+                ),
+
+                currentSong && React.createElement('audio', {
+                    ref: audioRef,
+                    onTimeUpdate: () => {
+                        if (audioRef.current?.duration) {
+                            setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100);
+                        }
+                    },
+                    onEnded: () => {
+                        if (repeat) {
+                            audioRef.current.currentTime = 0;
+                            setIsPlaying(true);
+                        } else {
+                            const p = playlists.find(x => x.id === currentSong.playlistId);
+                            if (p) {
+                                const idx = p.songs.findIndex(x => x.id === currentSong.id);
+                                if (idx < p.songs.length - 1) {
+                                    playSong(p.songs[idx + 1], currentSong.playlistId);
+                                } else {
+                                    setIsPlaying(false);
+                                }
+                            }
+                        }
+                    }
+                }),
+
+                React.createElement('input', {
+                    ref: fileInputRef,
+                    type: 'file',
+                    multiple: true,
+                    accept: 'audio/*',
+                    onChange: handleFileUpload,
+                    className: 'hidden'
+                })
             );
         }
 
         try {
             const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(React.createElement(App));
-            console.log('App rendered successfully');
+            root.render(React.createElement(MusicPlayer));
+            console.log('Music Player loaded successfully!');
         } catch (error) {
-            console.error('Render error:', error);
+            console.error('Error:', error);
             document.getElementById('root').innerHTML = '<div class="p-8 text-red-500">Error: ' + error.message + '</div>';
         }
     </script>
