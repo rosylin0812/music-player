@@ -626,4 +626,36 @@
                                 min: '0',
                                 max: '100',
                                 value: volume,
-                                onChange: (e) => setVolume(e
+                                onChange: (e) => setVolume(Number(e.target.value)),
+                                className: 'w-24 accent-white'
+                            })
+                        )
+                    )
+                ),
+
+                // Audio Element
+                currentSong && React.createElement('audio', {
+                    ref: audioRef,
+                    onTimeUpdate: handleTimeUpdate,
+                    onEnded: handleSongEnd
+                }),
+
+                // Hidden File Input
+                React.createElement('input', {
+                    ref: fileInputRef,
+                    type: 'file',
+                    multiple: true,
+                    accept: 'audio/*',
+                    onChange: handleFileUpload,
+                    className: 'hidden'
+                })
+            );
+        }
+
+        if (typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(React.createElement(MusicPlayer));
+        }
+    </script>
+</body>
+</html>
