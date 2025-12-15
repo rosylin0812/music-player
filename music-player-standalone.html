@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="root"></div>
+
+    <script>
+        const { useState, useEffect, useRef } = React;
+
+        function MusicPlayer() {
+            const [playlists, setPlaylists] = useState([]);
+            const [activePlaylist, setActivePlaylist] = useState(null);
+            const [currentSong, setCurrentSong] = useState(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [repeat, setRepeat] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [darkMode, setDarkMode] = useState(true);
+            const [draggedSong, setDraggedSong] = useState(null);
+            const [showUrlInput, setShowUrlInput] = useState(false);
+            const [urlInput, setUrlInput] = useState('');
+            const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+            const [newPlaylistName, setNewPlaylistName] = useState('');
+            const [confirmDelete, setConfirmDelete] = useState(null);
+            const audioRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            // Load from localStorage
+            useEffect(() => {
+                const saved = localStorage.getItem('music-playlists');
+                if (saved) {
+                    try {
+                        setPlaylists(JSON.parse(saved));
+                    } catch (e) {
+                        console.error('Failed to load playlists');
+                    }
+                }
+            }, []);
+
+            // Save to localStorage
+            useEffect(() => {
+                if (playlists.length > 0) {
+                    localStorage.setItem('music-playlists', JSON.stringify(playlists));
+                }
+            }, [playlists]);
+
+            // Audio playback effect
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    audioRef.current.src = currentSong.url;
+                    audioRef.current.load();
+                    
+                    if (isPlaying) {
+                        audioRef.current.play().catch(err => {
+                            console.error('Play failed:', err);
+                            setIsPlaying(false);
+                        });
+                    }
+                }
+            }, [currentSong]);
+
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    if (isPlaying) {
+                        audioRef.current.play().catch(err => {
+                            console.error('Play failed:', err);
+                            setIsPlaying(false);
+                        });
+                    } else {
+                        audioRef.current.pause();
+                    }
+                }
+            }, [isPlaying]);
+
+            const createPlaylist = () => {
+                setShowPlaylistModal(true);
+            };
+
+            const handleCreatePlaylist = () => {
+                if (newPlaylistName.trim()) {
+                    const newPlaylist = {
+                        id: Date.now(),
+                        name: newPlaylistName.trim(),
+                        songs: []
+                    };
+                    setPlaylists([...playlists, newPlaylist]);
+                    setActivePlaylist(newPlaylist.id);
+                    setNewPlaylistName('');
+                    setShowPlaylistModal(false);
+                }
+            };
+
+            const createSamplePlaylist = () => {
+                const samplePlaylist = {
+                    id: Date.now(),
+                    name: 'Sample Music',
+                    songs: [
+                        {
+                            id: Date.now() + 1,
+                            name: 'SoundHelix Song 1',
+                            url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                            isUrl: true
+                        },
+                        {
+                            id: Date.now() + 2,
+                            name: 'SoundHelix Song 2',
+                            url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                            isUrl: true
+                        },
+                        {
+                            id: Date.now() + 3,
+                            name: 'SoundHelix Song 3',
+                            url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                            isUrl: true
+                        }
+                    ]
+                };
+                setPlaylists([...playlists, samplePlaylist]);
+                setActivePlaylist(samplePlaylist.id);
+            };
+
+            const deletePlaylist = (id, e) => {
+                if (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                setConfirmDelete({ type: 'playlist', id });
+            };
+
+            const confirmDeleteAction = () => {
+                if (confirmDelete.type === 'playlist') {
+                    const newPlaylists = playlists.filter(p => p.id !== confirmDelete.id);
+                    setPlaylists(newPlaylists);
+                    if (activePlaylist === confirmDelete.id) {
+                        setActivePlaylist(null);
+                    }
+                    if (currentSong?.playlistId === confirmDelete.id) {
+                        setCurrentSong(null);
+                        setIsPlaying(false);
+                    }
+                } else if (confirmDelete.type === 'song') {
+                    const updatedPlaylists = playlists.map(p => {
+                        if (p.id === confirmDelete.playlistId) {
+                            return { ...p, songs: p.songs.filter(s => s.id !== confirmDelete.songId) };
+                        }
+                        return p;
+                    });
+                    setPlaylists(updatedPlaylists);
+                    if (currentSong?.id === confirmDelete.songId) {
+                        setCurrentSong(null);
+                        setIsPlaying(false);
+                    }
+                }
+                setConfirmDelete(null);
+            };
+
+            const copyPlaylist = (playlist, e) => {
+                if (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                const newPlaylist = {
+                    id: Date.now(),
+                    name: `${playlist.name} (Copy)`,
+                    songs: [...playlist.songs]
+                };
+                setPlaylists([...playlists, newPlaylist]);
+            };
+
+            const handleFileUpload = (e) => {
+                const files = Array.from(e.target.files);
+                if (!activePlaylist) {
+                    alert('Please select a playlist first');
+                    return;
+                }
+
+                const newSongs = files.map(file => ({
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    url: URL.createObjectURL(file)
+                }));
+
+                const updatedPlaylists = playlists.map(p => {
+                    if (p.id === activePlaylist) {
+                        return { ...p, songs: [...p.songs, ...newSongs] };
+                    }
+                    return p;
+                });
+
+                setPlaylists(updatedPlaylists);
+            };
+
+            const handleUrlSubmit = () => {
+                if (!urlInput.trim()) return;
+                
+                if (!activePlaylist) {
+                    alert('Please select a playlist first');
+                    return;
+                }
+                
+                try {
+                    new URL(urlInput);
+                } catch {
+                    alert('Please enter a valid URL');
+                    return;
+                }
+                
+                const song = {
+                    id: Date.now() + Math.random(),
+                    name: urlInput.split('/').pop().split('?')[0] || 'Audio from URL',
+                    url: urlInput,
+                    isUrl: true
+                };
+                
+                const updatedPlaylists = playlists.map(p => {
+                    if (p.id === activePlaylist) {
+                        return { ...p, songs: [...p.songs, song] };
+                    }
+                    return p;
+                });
+                
+                setPlaylists(updatedPlaylists);
+                setUrlInput('');
+                setShowUrlInput(false);
+            };
+
+            const playSong = (song, playlistId) => {
+                setCurrentSong({ ...song, playlistId });
+                setIsPlaying(true);
+            };
+
+            const togglePlay = () => {
+                setIsPlaying(!isPlaying);
+            };
+
+            const handleTimeUpdate = () => {
+                if (audioRef.current && audioRef.current.duration) {
+                    const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+                    setProgress(progress || 0);
+                }
+            };
+
+            const handleSongEnd = () => {
+                if (repeat && audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    setIsPlaying(true);
+                } else {
+                    const playlist = playlists.find(p => p.id === currentSong?.playlistId);
+                    if (playlist) {
+                        const currentIndex = playlist.songs.findIndex(s => s.id === currentSong.id);
+                        if (currentIndex < playlist.songs.length - 1) {
+                            playSong(playlist.songs[currentIndex + 1], currentSong.playlistId);
+                        } else {
+                            setIsPlaying(false);
+                        }
+                    }
+                }
+            };
+
+            const handleProgressClick = (e) => {
+                if (audioRef.current && audioRef.current.duration) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percentage = x / rect.width;
+                    audioRef.current.currentTime = percentage * audioRef.current.duration;
+                }
+            };
+
+            const deleteSong = (playlistId, songId, e) => {
+                if (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                setConfirmDelete({ type: 'song', playlistId, songId });
+            };
+
+            const handleDragStart = (e, song, playlistId) => {
+                e.stopPropagation();
+                setDraggedSong({ song, playlistId });
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
+
+            const handleDrop = (e, targetPlaylistId, targetIndex) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!draggedSong) return;
+
+                const updatedPlaylists = [...playlists];
+                const sourcePlaylist = updatedPlaylists.find(p => p.id === draggedSong.playlistId);
+                const targetPlaylist = updatedPlaylists.find(p => p.id === targetPlaylistId);
+
+                if (!sourcePlaylist || !targetPlaylist) return;
+
+                if (draggedSong.playlistId === targetPlaylistId) {
+                    const songs = [...sourcePlaylist.songs];
+                    const draggedIndex = songs.findIndex(s => s.id === draggedSong.song.id);
+                    const [removed] = songs.splice(draggedIndex, 1);
+                    songs.splice(targetIndex, 0, removed);
+                    sourcePlaylist.songs = songs;
+                } else {
+                    sourcePlaylist.songs = sourcePlaylist.songs.filter(s => s.id !== draggedSong.song.id);
+                    targetPlaylist.songs.splice(targetIndex, 0, draggedSong.song);
+                }
+
+                setPlaylists(updatedPlaylists);
+                setDraggedSong(null);
+            };
+
+            const bg = darkMode ? 'bg-gray-900' : 'bg-gray-100';
+            const cardBg = darkMode ? 'bg-gray-800' : 'bg-white';
+            const text = darkMode ? 'text-white' : 'text-gray-900';
+            const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600';
+            const border = darkMode ? 'border-gray-700' : 'border-gray-300';
+
+            return React.createElement('div', { className: `min-h-screen ${bg} ${text} transition-colors pb-24` },
+                // Header
+                React.createElement('div', { className: `${cardBg} border-b ${border} p-4 flex justify-between items-center` },
+                    React.createElement('h1', { className: 'text-2xl font-bold' }, 'Music Player'),
+                    React.createElement('button', {
+                        onClick: () => setDarkMode(!darkMode),
+                        className: `p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} hover:opacity-80`
+                    }, darkMode ? '☀️' : '🌙')
+                ),
+
+                // Main Content
+                React.createElement('div', { className: 'p-6' },
+                    React.createElement('div', { className: 'flex gap-2 mb-6' },
+                        React.createElement('button', {
+                            onClick: createPlaylist,
+                            className: 'flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                        }, '➕ New Playlist'),
+                        React.createElement('button', {
+                            onClick: createSamplePlaylist,
+                            className: 'flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700'
+                        }, '▶️ Load Sample Music')
+                    ),
+
+                    // Playlist Modal
+                    showPlaylistModal && React.createElement('div', {
+                        className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+                    },
+                        React.createElement('div', { className: `${cardBg} rounded-lg p-6 w-96 max-w-full mx-4` },
+                            React.createElement('h2', { className: 'text-xl font-bold mb-4' }, 'Create New Playlist'),
+                            React.createElement('input', {
+                                type: 'text',
+                                value: newPlaylistName,
+                                onChange: (e) => setNewPlaylistName(e.target.value),
+                                placeholder: 'Enter playlist name...',
+                                className: `w-full px-4 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded outline-none mb-4`,
+                                onKeyPress: (e) => e.key === 'Enter' && handleCreatePlaylist(),
+                                autoFocus: true
+                            }),
+                            React.createElement('div', { className: 'flex gap-2 justify-end' },
+                                React.createElement('button', {
+                                    onClick: () => {
+                                        setShowPlaylistModal(false);
+                                        setNewPlaylistName('');
+                                    },
+                                    className: `px-4 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded hover:opacity-80`
+                                }, 'Cancel'),
+                                React.createElement('button', {
+                                    onClick: handleCreatePlaylist,
+                                    className: 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                                }, 'Create')
+                            )
+                        )
+                    ),
+
+                    // Confirm Delete Modal
+                    confirmDelete && React.createElement('div', {
+                        className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'
+                    },
+                        React.createElement('div', { className: `${cardBg} rounded-lg p-6 w-96 max-w-full mx-4` },
+                            React.createElement('h2', { className: 'text-xl font-bold mb-4' }, 'Confirm Delete'),
+                            React.createElement('p', { className: 'mb-6' },
+                                confirmDelete.type === 'playlist' 
+                                    ? 'Are you sure you want to delete this playlist and all its songs?' 
+                                    : 'Are you sure you want to delete this song?'
+                            ),
+                            React.createElement('div', { className: 'flex gap-2 justify-end' },
+                                React.createElement('button', {
+                                    onClick: () => setConfirmDelete(null),
+                                    className: `px-4 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded hover:opacity-80`
+                                }, 'Cancel'),
+                                React.createElement('button', {
+                                    onClick: confirmDeleteAction,
+                                    className: 'px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700'
+                                }, 'Delete')
+                            )
+                        )
+                    ),
+
+                    // Playlists Grid
+                    React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                        playlists.map(playlist =>
+                            React.createElement('div', {
+                                key: playlist.id,
+                                className: `${cardBg} border ${border} rounded-lg p-4 ${activePlaylist === playlist.id ? 'ring-2 ring-blue-500' : ''}`,
+                                onDragOver: handleDragOver,
+                                onDrop: (e) => handleDrop(e, playlist.id, playlist.songs.length)
+                            },
+                                // Playlist Header
+                                React.createElement('div', { className: 'flex justify-between items-center mb-4' },
+                                    React.createElement('h2', {
+                                        className: 'text-xl font-semibold cursor-pointer flex-1',
+                                        onClick: () => setActivePlaylist(playlist.id)
+                                    }, playlist.name),
+                                    React.createElement('div', { className: 'flex gap-2' },
+                                        React.createElement('button', {
+                                            onClick: (e) => copyPlaylist(playlist, e),
+                                            className: `p-2 rounded ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`,
+                                            title: 'Copy playlist'
+                                        }, '📋'),
+                                        React.createElement('button', {
+                                            onClick: (e) => deletePlaylist(playlist.id, e),
+                                            className: `p-2 rounded ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'} text-red-400 hover:text-red-500`,
+                                            title: 'Delete playlist'
+                                        }, '🗑️')
+                                    )
+                                ),
+
+                                // Upload Buttons
+                                activePlaylist === playlist.id && React.createElement('div', { className: 'flex gap-2 mb-4' },
+                                    React.createElement('button', {
+                                        onClick: () => fileInputRef.current?.click(),
+                                        className: `flex-1 flex items-center justify-center gap-2 px-3 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded hover:opacity-80`
+                                    }, '📁 Upload Files'),
+                                    React.createElement('button', {
+                                        onClick: () => setShowUrlInput(!showUrlInput),
+                                        className: `flex-1 flex items-center justify-center gap-2 px-3 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded hover:opacity-80`
+                                    }, '🔗 Add URL')
+                                ),
+
+                                // URL Input
+                                activePlaylist === playlist.id && showUrlInput && React.createElement('div', { className: 'flex gap-2 mb-4' },
+                                    React.createElement('input', {
+                                        type: 'text',
+                                        value: urlInput,
+                                        onChange: (e) => setUrlInput(e.target.value),
+                                        placeholder: 'Enter audio URL...',
+                                        className: `flex-1 px-3 py-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded outline-none`,
+                                        onKeyPress: (e) => e.key === 'Enter' && handleUrlSubmit()
+                                    }),
+                                    React.createElement('button', {
+                                        onClick: handleUrlSubmit,
+                                        className: 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                                    }, 'Add')
+                                ),
+
+                                // Songs List
+                                React.createElement('div', { className: 'space-y-2 max-h-96 overflow-y-auto' },
+                                    playlist.songs.map((song, index) =>
+                                        React.createElement('div', {
+                                            key: song.id,
+                                            draggable: true,
+                                            onDragStart: (e) => handleDragStart(e, song, playlist.id),
+                                            onDragOver: handleDragOver,
+                                            onDrop: (e) => handleDrop(e, playlist.id, index),
+                                            className: `p-3 rounded flex items-center justify-between ${currentSong?.id === song.id ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'}`
+                                        },
+                                            React.createElement('div', {
+                                                className: 'flex-1 cursor-pointer truncate',
+                                                onClick: (e) => {
+                                                    e.stopPropagation();
+                                                    playSong(song, playlist.id);
+                                                }
+                                            },
+                                                React.createElement('span', { className: 'truncate' }, song.name),
+                                                currentSong?.id === song.id && isPlaying && React.createElement('span', { className: 'ml-2' }, '♪')
+                                            ),
+                                            React.createElement('button', {
+                                                onClick: (e) => deleteSong(playlist.id, song.id, e),
+                                                className: 'ml-2 p-1 rounded hover:bg-red-500 hover:text-white',
+                                                title: 'Delete song'
+                                            }, '🗑️')
+                                        )
+                                    ),
+                                    playlist.songs.length === 0 && React.createElement('p', {
+                                        className: `text-center py-8 ${textMuted}`
+                                    }, 'No songs yet. Upload files or add URLs.')
+                                )
+                            )
+                        )
+                    ),
+
+                    playlists.length === 0 && React.createElement('div', { className: 'text-center py-20' },
+                        React.createElement('p', { className: `text-xl ${textMuted}` }, 'Create a playlist to get started')
+                    )
+                ),
+
+                // Audio Element
+                currentSong && React.createElement('audio', {
+                    ref: audioRef,
+                    onTimeUpdate: handleTimeUpdate,
+                    onEnded: handleSongEnd
+                }),
+
+                // Bottom Player
+                currentSong && React.createElement('div', {
+                    className: `fixed bottom-0 left-0 right-0 ${cardBg} border-t ${border} p-4`
+                },
+                    React.createElement('div', { className: 'max-w-7xl mx-auto' },
+                        React.createElement('div', { className: 'flex items-center gap-4 mb-2' },
+                            React.createElement('button', {
+                                onClick: togglePlay,
+                                className: 'p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 text-2xl'
+                            }, isPlaying ? '⏸️' : '▶️'),
+                            
+                            React.createElement('div', { className: 'flex-1' },
+                                React.createElement('p', { className: 'font-semibold truncate' }, currentSong.name),
+                                React.createElement('p', { className: `text-sm ${textMuted}` },
+                                    playlists.find(p => p.id === currentSong.playlistId)?.name
+                                )
+                            ),
+
+                            React.createElement('button', {
+                                onClick: () => setRepeat(!repeat),
+                                className: `p-2 rounded ${repeat ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700' : 'bg-gray-200'}`,
+                                title: 'Repeat'
+                            }, '🔂')
+                        ),
+
+                        // Progress Bar
+                        React.createElement('div', {
+                            className: `h-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded-full cursor-pointer`,
+                            onClick: handleProgressClick
+                        },
+                            React.createElement('div', {
+                                className: 'h-full bg-blue-600 rounded-full transition-all',
+                                style: { width: `${progress}%` }
+                            })
+                        )
+                    )
+                ),
+
+                // Hidden File Input
+                React.createElement('input', {
+                    ref: fileInputRef,
+                    type: 'file',
+                    multiple: true,
+                    accept: 'audio/*',
+                    onChange: handleFileUpload,
+                    className: 'hidden'
+                })
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(MusicPlayer));
+    </script>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</body>
+</html>
