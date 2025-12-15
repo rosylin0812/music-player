@@ -23,9 +23,15 @@
             background: #000000; 
             color: #ffffff;
         }
+        .bg-dark * {
+            color: #ffffff;
+        }
         .bg-light { 
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #d4d4d4 100%); 
-            color: #1a1a1a;
+            color: #000000;
+        }
+        .bg-light * {
+            color: #000000;
         }
         .sidebar-dark { 
             background: #000000; 
@@ -118,8 +124,8 @@
             background: rgba(255, 255, 255, 0.12);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -162,8 +168,22 @@
         }
         
         /* Text - Pure white for dark mode */
-        .text-muted-dark { color: #b3b3b3; }
-        .text-muted-light { color: #6b7280; }
+        .bg-dark .text-muted-dark { color: #b3b3b3; }
+        .bg-light .text-muted-light { color: #6b7280; }
+        
+        .bg-dark input,
+        .bg-dark button,
+        .bg-dark .icon-btn,
+        .bg-dark svg {
+            color: #ffffff;
+        }
+        
+        .bg-light input,
+        .bg-light button,
+        .bg-light .icon-btn,
+        .bg-light svg {
+            color: #000000;
+        }
         
         /* Utilities */
         .flex { display: flex; }
@@ -358,14 +378,30 @@
             bottom: 0; 
             left: 0; 
             right: 0; 
-            padding: 16px 20px; 
+            padding: 12px 20px; 
             z-index: 50; 
         }
         
         .player-controls {
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .player-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
         }
         
         .progress-bar { 
@@ -423,12 +459,12 @@
             
             .mobile-header { 
                 display: flex; 
-                position: sticky; 
-                top: 0; 
+                position: relative;
                 padding: 16px 20px; 
                 align-items: center; 
                 gap: 16px; 
-                z-index: 10; 
+                z-index: 10;
+                background: inherit;
             }
             
             .overlay { 
@@ -440,20 +476,29 @@
             }
             .overlay.open { display: block; }
             
-            .main { padding-bottom: 180px; }
+            .main { padding-bottom: 200px; }
             
             .btn-primary, .btn-secondary {
-                padding: 14px 24px;
-                font-size: 15px;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .icon-btn {
+                width: 36px;
+                height: 36px;
             }
             
             .player {
-                padding: 12px 16px;
+                padding: 10px 16px;
             }
             
             .player-controls {
-                flex-wrap: wrap;
-                gap: 8px;
+                gap: 6px;
+            }
+            
+            .player-main {
+                flex-direction: column;
+                gap: 12px;
             }
             
             .hide-mobile {
@@ -461,15 +506,38 @@
             }
             
             .debug-panel {
-                bottom: 160px;
+                bottom: 200px;
                 right: 10px;
                 max-width: 250px;
                 font-size: 10px;
             }
             
             .debug-toggle {
-                bottom: 160px;
+                bottom: 200px;
                 right: 10px;
+            }
+            
+            .playlist-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 12px;
+            }
+            
+            .playlist-grid-card {
+                padding: 12px;
+                min-width: 100px;
+            }
+            
+            .playlist-grid-card > div:first-of-type {
+                font-size: 32px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .playlist-grid-card .font-bold {
+                font-size: 13px !important;
+            }
+            
+            .playlist-grid-card .text-sm {
+                font-size: 11px !important;
             }
         }
         
@@ -1871,25 +1939,27 @@
                 
                 // PLAYER BAR (IMPROVED)
                 currentSong && React.createElement('div', { className: `player ${card}` },
+                    // Song info and time
                     React.createElement('div', { 
-                        className: 'flex items-center gap-3 mb-3',
-                        style: { flexWrap: 'wrap' }
+                        className: 'player-info'
                     },
                         React.createElement('div', { 
                             className: 'font-bold truncate', 
                             style: { 
                                 flex: 1, 
-                                minWidth: '150px',
+                                minWidth: '120px',
                                 color: '#ffffff'
                             } 
                         }, currentSong.name),
                         React.createElement('div', { 
-                            style: { fontSize: '14px', color: '#b3b3b3' }
+                            style: { fontSize: '13px', color: '#b3b3b3', flexShrink: 0 }
                         }, formatTime(audioRef.current?.currentTime))
                     ),
                     
+                    // Progress bar
                     React.createElement('div', {
-                        className: 'progress-bar mb-3',
+                        className: 'progress-bar',
+                        style: { marginBottom: '10px' },
                         onClick: (e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const pos = (e.clientX - rect.left) / rect.width;
@@ -1904,10 +1974,11 @@
                         })
                     ),
                     
+                    // Controls layout
                     React.createElement('div', { 
-                        className: 'flex items-center justify-between',
-                        style: { gap: '12px', flexWrap: 'wrap' }
+                        className: 'player-main'
                     },
+                        // Playback controls (centered)
                         React.createElement('div', { className: 'player-controls' },
                             React.createElement('button', {
                                 onClick: playPrevious,
@@ -1938,6 +2009,7 @@
                                 title: 'Repeat'
                             }, React.createElement(Icons.Repeat))
                         ),
+                        // Volume controls (desktop only)
                         React.createElement('div', { 
                             className: 'flex items-center gap-3 hide-mobile' 
                         },
