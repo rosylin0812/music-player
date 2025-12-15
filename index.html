@@ -29,19 +29,20 @@
         }
         .sidebar-dark { 
             background: #000000; 
-            border-right: 1px solid rgba(255, 255, 255, 0.1); 
+            border-right: 1px solid rgba(255, 255, 255, 0.15); 
         }
         .sidebar-light { 
             background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%); 
             border-right: 1px solid rgba(0, 0, 0, 0.05); 
         }
         
-        /* Cards */
+        /* Cards - Higher contrast for dark mode */
         .card-dark { 
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
         }
         .card-light { 
             background: rgba(255, 255, 255, 0.95);
@@ -58,15 +59,27 @@
             transition: all 0.3s;
             text-align: center;
             min-width: 140px;
+            position: relative;
         }
         .playlist-grid-card:hover {
             transform: translateY(-4px);
         }
         
-        /* Buttons */
+        .playlist-grid-card .grid-menu-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .playlist-grid-card:hover .grid-menu-btn {
+            opacity: 1;
+        }
+        
+        /* Buttons - Brighter for dark mode */
         .btn-primary {
             background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.3);
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: none;
             color: white;
@@ -78,18 +91,18 @@
         }
         .btn-primary:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4); 
+            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.5); 
         }
         .btn-primary:active {
             transform: translateY(0);
         }
         
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             transition: all 0.3s;
-            color: inherit;
+            color: #ffffff;
             font-weight: 600;
             cursor: pointer;
             padding: 12px 28px;
@@ -97,13 +110,13 @@
             font-size: 15px;
         }
         .btn-secondary:hover { 
-            background: rgba(255, 255, 255, 0.18); 
+            background: rgba(255, 255, 255, 0.22); 
             transform: translateY(-1px); 
         }
         
         .icon-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 44px;
             height: 44px;
@@ -113,9 +126,10 @@
             cursor: pointer;
             transition: all 0.2s;
             flex-shrink: 0;
+            color: #ffffff;
         }
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.22);
             transform: scale(1.1);
         }
         .icon-btn:active {
@@ -147,7 +161,7 @@
             padding-bottom: 140px; 
         }
         
-        /* Text */
+        /* Text - Pure white for dark mode */
         .text-muted-dark { color: #b3b3b3; }
         .text-muted-light { color: #6b7280; }
         
@@ -195,8 +209,8 @@
         
         .bg-dark input[type="text"],
         .bg-dark input[type="search"] {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
         }
         .bg-dark input::placeholder {
@@ -214,11 +228,11 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { 
-            background: rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.3); 
             border-radius: 4px; 
         }
         ::-webkit-scrollbar-thumb:hover { 
-            background: rgba(255,255,255,0.3); 
+            background: rgba(255,255,255,0.4); 
         }
         
         /* Playlist item with drag handle */
@@ -231,6 +245,7 @@
             align-items: center;
             gap: 12px;
             position: relative;
+            color: #ffffff;
         }
         .playlist-item:active {
             cursor: grabbing;
@@ -247,7 +262,7 @@
         }
         
         .drag-handle {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.4);
             font-size: 18px;
             cursor: grab;
         }
@@ -264,6 +279,7 @@
             display: flex; 
             align-items: center; 
             gap: 16px; 
+            color: #ffffff;
         }
         .song-item:hover { 
             transform: scale(1.01); 
@@ -279,7 +295,7 @@
         .modal-overlay { 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,0.75); 
+            background: rgba(0,0,0,0.85); 
             backdrop-filter: blur(8px); 
             display: flex; 
             align-items: center; 
@@ -299,7 +315,7 @@
         
         .modal-dark {
             background: rgba(30, 30, 40, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #ffffff;
         }
         
@@ -313,12 +329,12 @@
         .context-menu {
             position: absolute;
             background: rgba(40, 40, 50, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: 8px;
             padding: 8px;
             z-index: 100;
             min-width: 160px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
         
         .context-menu-item {
@@ -329,10 +345,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #ffffff;
         }
         
         .context-menu-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
         }
         
         /* Player - IMPROVED */
@@ -353,7 +370,7 @@
         
         .progress-bar { 
             height: 6px; 
-            background: rgba(255,255,255,0.2); 
+            background: rgba(255,255,255,0.25); 
             border-radius: 3px; 
             cursor: pointer; 
             position: relative;
@@ -365,6 +382,29 @@
             background: #1DB954; 
             border-radius: 3px; 
             transition: width 0.1s linear;
+        }
+        
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            background: rgba(30, 30, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            color: #ffffff;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1001;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            z-index: 1002;
         }
         
         /* Mobile */
@@ -419,6 +459,18 @@
             .hide-mobile {
                 display: none !important;
             }
+            
+            .debug-panel {
+                bottom: 160px;
+                right: 10px;
+                max-width: 250px;
+                font-size: 10px;
+            }
+            
+            .debug-toggle {
+                bottom: 160px;
+                right: 10px;
+            }
         }
         
         @media (min-width: 769px) {
@@ -427,7 +479,7 @@
         
         /* Offline indicator */
         .offline-banner {
-            background: rgba(255, 152, 0, 0.9);
+            background: rgba(255, 152, 0, 0.95);
             color: white;
             padding: 12px;
             text-align: center;
@@ -442,6 +494,32 @@
             gap: 16px;
             margin-bottom: 32px;
         }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            color: #ffffff;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #1DB954;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -453,6 +531,11 @@
     <script>
         const { useState, useEffect, useRef } = React;
         const PRIMARY = '#1DB954';
+
+        // Debug logging helper
+        const debugLog = (message, data) => {
+            console.log(`[MusicPlayer] ${message}`, data || '');
+        };
 
         // SVG Icons Component
         const Icons = {
@@ -534,25 +617,43 @@
                 React.createElement('circle', { cx: '15', cy: '5', r: '1' }),
                 React.createElement('circle', { cx: '15', cy: '12', r: '1' }),
                 React.createElement('circle', { cx: '15', cy: '19', r: '1' })
+            ),
+            Bug: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('rect', { x: '8', y: '6', width: '8', height: '14', rx: '4' }),
+                React.createElement('path', { d: 'M8 6h8M12 2v4M8 10h8M8 14h8' })
             )
         };
 
-        // IndexedDB
+        // IndexedDB with better error handling
         const initDB = () => {
             return new Promise((resolve, reject) => {
+                debugLog('Initializing IndexedDB...');
                 const req = indexedDB.open('MusicDB', 2);
-                req.onerror = () => reject(req.error);
-                req.onsuccess = () => resolve(req.result);
+                
+                req.onerror = () => {
+                    debugLog('IndexedDB error:', req.error);
+                    reject(req.error);
+                };
+                
+                req.onsuccess = () => {
+                    debugLog('IndexedDB opened successfully');
+                    resolve(req.result);
+                };
+                
                 req.onupgradeneeded = (e) => {
+                    debugLog('IndexedDB upgrade needed');
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains('playlists')) {
                         db.createObjectStore('playlists', { keyPath: 'id' });
+                        debugLog('Created playlists store');
                     }
                     if (!db.objectStoreNames.contains('songs')) {
                         db.createObjectStore('songs', { keyPath: 'id' });
+                        debugLog('Created songs store');
                     }
                     if (!db.objectStoreNames.contains('settings')) {
                         db.createObjectStore('settings', { keyPath: 'key' });
+                        debugLog('Created settings store');
                     }
                 };
             });
@@ -561,44 +662,101 @@
         const DB = {
             async save(store, data) {
                 try {
+                    debugLog(`Saving to ${store}:`, data.id || data.key);
                     const db = await initDB();
-                    const tx = db.transaction(store, 'readwrite');
-                    tx.objectStore(store).put(data);
-                    return new Promise((res) => { tx.oncomplete = res; });
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readwrite');
+                        const req = tx.objectStore(store).put(data);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Saved to ${store} successfully`);
+                            resolve(req.result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error saving to ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                        
+                        tx.oncomplete = () => {
+                            debugLog(`Transaction complete for ${store}`);
+                        };
+                    });
                 } catch (e) {
-                    console.error('DB save error:', e);
+                    debugLog('DB save error:', e);
+                    throw e;
                 }
             },
+            
             async get(store, key) {
                 try {
+                    debugLog(`Getting from ${store}:`, key);
                     const db = await initDB();
-                    const tx = db.transaction(store, 'readonly');
-                    const req = tx.objectStore(store).get(key);
-                    return new Promise((res) => { req.onsuccess = () => res(req.result); });
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readonly');
+                        const req = tx.objectStore(store).get(key);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Got from ${store}:`, req.result ? 'Found' : 'Not found');
+                            resolve(req.result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error getting from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
                 } catch (e) {
-                    console.error('DB get error:', e);
+                    debugLog('DB get error:', e);
                     return null;
                 }
             },
+            
             async getAll(store) {
                 try {
+                    debugLog(`Getting all from ${store}`);
                     const db = await initDB();
-                    const tx = db.transaction(store, 'readonly');
-                    const req = tx.objectStore(store).getAll();
-                    return new Promise((res) => { req.onsuccess = () => res(req.result || []); });
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readonly');
+                        const req = tx.objectStore(store).getAll();
+                        
+                        req.onsuccess = () => {
+                            const result = req.result || [];
+                            debugLog(`Got all from ${store}: ${result.length} items`);
+                            resolve(result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error getting all from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
                 } catch (e) {
-                    console.error('DB getAll error:', e);
+                    debugLog('DB getAll error:', e);
                     return [];
                 }
             },
+            
             async delete(store, key) {
                 try {
+                    debugLog(`Deleting from ${store}:`, key);
                     const db = await initDB();
-                    const tx = db.transaction(store, 'readwrite');
-                    tx.objectStore(store).delete(key);
-                    return new Promise((res) => { tx.oncomplete = res; });
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readwrite');
+                        const req = tx.objectStore(store).delete(key);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Deleted from ${store} successfully`);
+                            resolve();
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error deleting from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
                 } catch (e) {
-                    console.error('DB delete error:', e);
+                    debugLog('DB delete error:', e);
                 }
             }
         };
@@ -622,9 +780,12 @@
             const [draggedPlaylist, setDraggedPlaylist] = useState(null);
             const [draggedSong, setDraggedSong] = useState(null);
             const [recentPlaylistId, setRecentPlaylistId] = useState(null);
+            const [showDebug, setShowDebug] = useState(false);
+            const [debugInfo, setDebugInfo] = useState({});
             
             const audioRef = useRef(null);
             const fileInputRef = useRef(null);
+            const saveTimeoutRef = useRef(null);
 
             const bg = darkMode ? 'bg-dark' : 'bg-light';
             const sidebar = darkMode ? 'sidebar-dark' : 'sidebar-light';
@@ -632,10 +793,28 @@
             const txtMuted = darkMode ? 'text-muted-dark' : 'text-muted-light';
             const modalClass = darkMode ? 'modal-dark' : 'modal-light';
 
+            // Update debug info
+            useEffect(() => {
+                setDebugInfo({
+                    playlistCount: playlists.length,
+                    activePlaylist: activePlaylist ? 'Set' : 'None',
+                    loading: loading,
+                    isOnline: isOnline,
+                    currentSong: currentSong ? currentSong.name : 'None',
+                    lastUpdate: new Date().toLocaleTimeString()
+                });
+            }, [playlists, activePlaylist, loading, isOnline, currentSong]);
+
             // Online/Offline detection
             useEffect(() => {
-                const handleOnline = () => setIsOnline(true);
-                const handleOffline = () => setIsOnline(false);
+                const handleOnline = () => {
+                    debugLog('Network: Online');
+                    setIsOnline(true);
+                };
+                const handleOffline = () => {
+                    debugLog('Network: Offline');
+                    setIsOnline(false);
+                };
                 
                 window.addEventListener('online', handleOnline);
                 window.addEventListener('offline', handleOffline);
@@ -653,42 +832,93 @@
                 return () => document.removeEventListener('click', handleClick);
             }, []);
 
-            useEffect(() => { loadData(); }, []);
+            // FIXED: Load data with proper async/await
+            useEffect(() => { 
+                loadData(); 
+            }, []);
 
             const loadData = async () => {
                 try {
+                    debugLog('=== STARTING DATA LOAD ===');
+                    setLoading(true);
+                    
+                    // Wait for all data to load
                     const [lists, mode, vol, recent] = await Promise.all([
                         DB.getAll('playlists'),
                         DB.get('settings', 'darkMode'),
                         DB.get('settings', 'volume'),
                         DB.get('settings', 'recentPlaylist')
                     ]);
+                    
+                    debugLog('Loaded playlists:', lists.length);
+                    debugLog('Loaded darkMode:', mode?.value);
+                    debugLog('Loaded volume:', vol?.value);
+                    debugLog('Loaded recent:', recent?.value);
+                    
+                    // Set all state AFTER data is loaded
                     if (lists && lists.length > 0) {
                         setPlaylists(lists);
                         const recentId = recent?.value || lists[0].id;
                         setRecentPlaylistId(recentId);
                         setActivePlaylist(recentId);
+                        debugLog('Set active playlist:', recentId);
+                    } else {
+                        debugLog('No playlists found');
+                        setPlaylists([]);
+                        setActivePlaylist(null);
+                        setRecentPlaylistId(null);
                     }
+                    
                     if (mode) setDarkMode(mode.value);
                     if (vol) setVolume(vol.value);
+                    
+                    debugLog('=== DATA LOAD COMPLETE ===');
                 } catch (e) {
-                    console.error('Load error:', e);
+                    debugLog('Load error:', e);
+                    alert('Error loading data: ' + e.message);
                 } finally {
-                    setLoading(false);
+                    // Small delay to ensure everything is rendered
+                    setTimeout(() => {
+                        setLoading(false);
+                        debugLog('Loading state set to false');
+                    }, 300);
                 }
             };
 
+            // FIXED: Debounced save for playlists
             useEffect(() => {
-                if (!loading) playlists.forEach(p => DB.save('playlists', p));
-            }, [playlists]);
+                if (loading) return;
+                
+                debugLog('Playlist changed, scheduling save...');
+                
+                // Clear previous timeout
+                if (saveTimeoutRef.current) {
+                    clearTimeout(saveTimeoutRef.current);
+                }
+                
+                // Save after 500ms of no changes
+                saveTimeoutRef.current = setTimeout(async () => {
+                    debugLog('Saving all playlists...');
+                    for (const p of playlists) {
+                        await DB.save('playlists', p);
+                    }
+                    debugLog('All playlists saved');
+                }, 500);
+                
+                return () => {
+                    if (saveTimeoutRef.current) {
+                        clearTimeout(saveTimeoutRef.current);
+                    }
+                };
+            }, [playlists, loading]);
 
             useEffect(() => {
                 if (!loading) DB.save('settings', { key: 'darkMode', value: darkMode });
-            }, [darkMode]);
+            }, [darkMode, loading]);
 
             useEffect(() => {
                 if (!loading) DB.save('settings', { key: 'volume', value: volume });
-            }, [volume]);
+            }, [volume, loading]);
 
             useEffect(() => {
                 if (!loading && activePlaylist) {
@@ -721,42 +951,63 @@
                 setShowModal('create');
             };
 
-            const handleCreate = () => {
+            const handleCreate = async () => {
                 if (modalInput.trim()) {
+                    debugLog('Creating playlist:', modalInput);
                     const id = Date.now();
                     const newPlaylist = { id, name: modalInput.trim(), songs: [] };
+                    
+                    // Save immediately
+                    await DB.save('playlists', newPlaylist);
+                    
                     setPlaylists([...playlists, newPlaylist]);
                     setActivePlaylist(id);
                     setShowModal(null);
                     setSidebarOpen(false);
+                    
+                    debugLog('Playlist created and saved');
                 }
             };
 
-            const duplicatePlaylist = (playlist) => {
+            const duplicatePlaylist = async (playlist) => {
+                debugLog('Duplicating playlist:', playlist.name);
                 const id = Date.now();
                 const newPlaylist = { 
                     id, 
                     name: `${playlist.name} (Copy)`, 
                     songs: [...playlist.songs] 
                 };
+                
+                // Save immediately
+                await DB.save('playlists', newPlaylist);
+                
                 setPlaylists([...playlists, newPlaylist]);
                 setContextMenu(null);
+                
+                debugLog('Playlist duplicated and saved');
             };
 
             const deletePlaylist = async (id) => {
+                debugLog('Deleting playlist:', id);
                 const p = playlists.find(x => x.id === id);
                 if (p) {
                     for (const s of p.songs) {
                         if (!s.isUrl) await DB.delete('songs', s.id);
                     }
+                    await DB.delete('playlists', id);
                 }
+                
                 const newPlaylists = playlists.filter(x => x.id !== id);
                 setPlaylists(newPlaylists);
+                
                 if (activePlaylist === id) {
                     setActivePlaylist(newPlaylists.length > 0 ? newPlaylists[0].id : null);
                 }
+                
                 setContextMenu(null);
                 setShowModal(null);
+                
+                debugLog('Playlist deleted');
             };
 
             const handleFileUpload = async (e) => {
@@ -768,10 +1019,13 @@
                 const files = Array.from(e.target.files);
                 if (files.length === 0) return;
                 
+                debugLog('Uploading files:', files.length);
+                
                 const playlist = playlists.find(p => p.id === activePlaylist);
                 if (!playlist) return;
 
                 for (const file of files) {
+                    debugLog('Processing file:', file.name);
                     const id = Date.now() + Math.random();
                     const song = { 
                         id, 
@@ -782,14 +1036,19 @@
                     playlist.songs.push(song);
                 }
                 
+                // Save playlist immediately
+                await DB.save('playlists', playlist);
+                
                 setPlaylists([...playlists]);
                 
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
+                
+                debugLog('Files uploaded and saved');
             };
 
-            const handleUrlSubmit = () => {
+            const handleUrlSubmit = async () => {
                 if (!modalInput.trim() || !activePlaylist) return;
                 
                 try { 
@@ -798,6 +1057,8 @@
                     alert('Invalid URL. Please enter a valid audio URL.');
                     return; 
                 }
+                
+                debugLog('Adding URL:', modalInput);
                 
                 const playlist = playlists.find(p => p.id === activePlaylist);
                 if (!playlist) return;
@@ -810,9 +1071,14 @@
                     isUrl: true
                 });
                 
+                // Save playlist immediately
+                await DB.save('playlists', playlist);
+                
                 setPlaylists([...playlists]);
                 setModalInput('');
                 setShowModal(null);
+                
+                debugLog('URL added and saved');
             };
 
             const playSong = async (song, pid) => {
@@ -849,14 +1115,20 @@
             };
 
             const deleteSong = async (id, pid) => {
+                debugLog('Deleting song:', id);
                 const p = playlists.find(x => x.id === pid);
                 if (p) {
                     const s = p.songs.find(x => x.id === id);
                     if (s && !s.isUrl) await DB.delete('songs', s.id);
                     p.songs = p.songs.filter(x => x.id !== id);
+                    
+                    // Save playlist immediately
+                    await DB.save('playlists', p);
+                    
                     setPlaylists([...playlists]);
                 }
                 setShowModal(null);
+                debugLog('Song deleted');
             };
 
             const exportData = () => {
@@ -876,10 +1148,14 @@
                 if (!file) return;
                 
                 const reader = new FileReader();
-                reader.onload = (ev) => {
+                reader.onload = async (ev) => {
                     try {
                         const data = JSON.parse(ev.target.result);
                         if (Array.isArray(data)) {
+                            // Save all imported playlists immediately
+                            for (const playlist of data) {
+                                await DB.save('playlists', playlist);
+                            }
                             setPlaylists([...playlists, ...data]);
                         }
                     } catch { 
@@ -953,17 +1229,12 @@
                 p.songs.some(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
             );
 
+            // FIXED: Better loading state
             if (loading) {
-                return React.createElement('div', { 
-                    className: bg, 
-                    style: { 
-                        height: '100vh', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center' 
-                    } 
-                },
-                    React.createElement('div', { className: 'text-2xl' }, 'Loading your library...')
+                return React.createElement('div', { className: 'loading-overlay' },
+                    React.createElement('div', { className: 'spinner' }),
+                    React.createElement('div', { style: { marginTop: '20px', fontSize: '18px' } }, 'Loading your library...'),
+                    React.createElement('div', { style: { marginTop: '8px', fontSize: '14px', opacity: 0.7 } }, 'Please wait')
                 );
             }
 
@@ -971,7 +1242,7 @@
             if (playlists.length === 0) {
                 return React.createElement('div', { className: bg, style: { height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' } },
                     React.createElement('div', { style: { textAlign: 'center', maxWidth: '500px' } },
-                        React.createElement('div', { className: 'text-3xl font-bold mb-4' }, 'Welcome to Music Player'),
+                        React.createElement('div', { className: 'text-3xl font-bold mb-4', style: { color: '#ffffff' } }, 'Welcome to Music Player'),
                         React.createElement('div', { className: `mb-6 ${txtMuted}`, style: { fontSize: '16px', lineHeight: '1.6' } }, 
                             'Create your first playlist to start organizing your dharma instrument recordings and practice sessions.'
                         ),
@@ -981,6 +1252,24 @@
             }
 
             return React.createElement('div', null,
+                // Debug Toggle Button
+                React.createElement('button', {
+                    className: 'debug-toggle icon-btn',
+                    onClick: () => setShowDebug(!showDebug),
+                    title: 'Toggle Debug Info'
+                }, React.createElement(Icons.Bug)),
+                
+                // Debug Panel
+                showDebug && React.createElement('div', { className: 'debug-panel' },
+                    React.createElement('div', { style: { fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' } }, 'Debug Info'),
+                    React.createElement('div', {}, `Playlists: ${debugInfo.playlistCount}`),
+                    React.createElement('div', {}, `Active: ${debugInfo.activePlaylist}`),
+                    React.createElement('div', {}, `Loading: ${debugInfo.loading}`),
+                    React.createElement('div', {}, `Online: ${debugInfo.isOnline}`),
+                    React.createElement('div', {}, `Playing: ${debugInfo.currentSong}`),
+                    React.createElement('div', { style: { marginTop: '8px', fontSize: '10px', opacity: 0.7 } }, `Updated: ${debugInfo.lastUpdate}`)
+                ),
+                
                 // Offline banner
                 !isOnline && React.createElement('div', { className: 'offline-banner' },
                     'Offline Mode - Only local songs available'
@@ -1004,12 +1293,12 @@
                     }
                 }),
                 
-                // File input
+                // File input - iOS FIXED
                 React.createElement('input', {
                     ref: fileInputRef,
                     type: 'file',
                     multiple: true,
-                    accept: 'audio/*',
+                    accept: 'audio/*,.mp3,.m4a,.wav,.aac,.flac,.ogg,.mp4',
                     onChange: handleFileUpload,
                     style: { display: 'none' }
                 }),
@@ -1056,7 +1345,8 @@
                             className: 'flex items-center justify-between' 
                         },
                             React.createElement('div', { 
-                                className: 'text-2xl font-bold' 
+                                className: 'text-2xl font-bold',
+                                style: { color: '#ffffff' }
                             }, 'Music'),
                             React.createElement('button', {
                                 onClick: () => setDarkMode(!darkMode),
@@ -1087,10 +1377,11 @@
                         // Playlist list
                         React.createElement('div', { style: { flex: 1, overflowY: 'auto' } },
                             React.createElement('div', { 
-                                className: `text-xs ${txtMuted} font-bold mb-2`, 
+                                className: `text-xs font-bold mb-2`, 
                                 style: { 
                                     textTransform: 'uppercase', 
-                                    letterSpacing: '0.05em' 
+                                    letterSpacing: '0.05em',
+                                    color: '#b3b3b3'
                                 } 
                             }, 'Your Library'),
                             
@@ -1118,10 +1409,11 @@
                                 },
                                     React.createElement('div', { 
                                         className: 'font-bold truncate', 
-                                        style: activePlaylist === p.id ? { color: PRIMARY } : {} 
+                                        style: { color: activePlaylist === p.id ? PRIMARY : '#ffffff' }
                                     }, p.name),
                                     React.createElement('div', { 
-                                        className: `text-sm ${txtMuted}` 
+                                        className: `text-sm`,
+                                        style: { color: '#b3b3b3' }
                                     }, `${p.songs.length} tracks`)
                                 ),
                                 React.createElement('button', {
@@ -1148,7 +1440,8 @@
                                 className: 'icon-btn icon-btn-small'
                             }, React.createElement(Icons.Menu)),
                             React.createElement('div', { 
-                                className: 'font-bold text-xl truncate' 
+                                className: 'font-bold text-xl truncate',
+                                style: { color: '#ffffff' }
                             }, current?.name || 'Music Player')
                         ),
                         
@@ -1156,30 +1449,48 @@
                         React.createElement('div', { className: 'p-8' },
                             // Playlist Grid
                             React.createElement('div', { className: 'mb-8' },
-                                React.createElement('div', { className: 'text-2xl font-bold mb-4' }, 'Your Playlists'),
+                                React.createElement('div', { 
+                                    className: 'text-2xl font-bold mb-4',
+                                    style: { color: '#ffffff' }
+                                }, 'Your Playlists'),
                                 React.createElement('div', { className: 'playlist-grid' },
                                     playlists.map(p => React.createElement('div', {
                                         key: p.id,
                                         onClick: () => setActivePlaylist(p.id),
                                         className: `playlist-grid-card ${card}`,
-                                        style: activePlaylist === p.id ? { 
-                                            borderColor: PRIMARY,
-                                            borderWidth: '2px',
-                                            borderStyle: 'solid'
-                                        } : {}
+                                        style: { 
+                                            ...(activePlaylist === p.id ? { 
+                                                borderColor: PRIMARY,
+                                                borderWidth: '2px',
+                                                borderStyle: 'solid'
+                                            } : {}),
+                                            color: '#ffffff'
+                                        }
                                     },
+                                        React.createElement('button', {
+                                            className: 'grid-menu-btn icon-btn icon-btn-small',
+                                            onClick: (e) => {
+                                                e.stopPropagation();
+                                                setContextMenu({
+                                                    x: e.clientX - 160,
+                                                    y: e.clientY,
+                                                    playlist: p
+                                                });
+                                            }
+                                        }, React.createElement(Icons.MoreVertical)),
                                         React.createElement('div', { 
                                             style: { 
                                                 fontSize: '48px', 
-                                                marginBottom: '12px' 
+                                                marginBottom: '12px'
                                             } 
                                         }, React.createElement(Icons.Music)),
                                         React.createElement('div', { 
                                             className: 'font-bold truncate',
-                                            style: { marginBottom: '4px' }
+                                            style: { marginBottom: '4px', color: '#ffffff' }
                                         }, p.name),
                                         React.createElement('div', { 
-                                            className: `text-sm ${txtMuted}` 
+                                            className: `text-sm`,
+                                            style: { color: '#b3b3b3' }
                                         }, `${p.songs.length} tracks`)
                                     ))
                                 )
@@ -1189,8 +1500,13 @@
                             current && React.createElement('div', null,
                                 React.createElement('div', { className: 'flex items-center justify-between mb-6' },
                                     React.createElement('div', null,
-                                        React.createElement('div', { className: 'text-3xl font-bold mb-2' }, current.name),
-                                        React.createElement('div', { className: txtMuted }, `${current.songs.length} tracks`)
+                                        React.createElement('div', { 
+                                            className: 'text-3xl font-bold mb-2',
+                                            style: { color: '#ffffff' }
+                                        }, current.name),
+                                        React.createElement('div', { 
+                                            style: { color: '#b3b3b3' }
+                                        }, `${current.songs.length} tracks`)
                                     ),
                                     React.createElement('button', {
                                         className: 'icon-btn',
@@ -1252,7 +1568,8 @@
                                                 width: '40px', 
                                                 textAlign: 'center', 
                                                 fontWeight: 'bold',
-                                                flexShrink: 0
+                                                flexShrink: 0,
+                                                color: '#ffffff'
                                             } 
                                         }, currentSong?.id === s.id && isPlaying ? 
                                             React.createElement(Icons.Music) : i + 1
@@ -1260,10 +1577,11 @@
                                         React.createElement('div', { style: { flex: 1, minWidth: 0 } },
                                             React.createElement('div', { 
                                                 className: 'font-bold truncate', 
-                                                style: currentSong?.id === s.id ? { color: PRIMARY } : {} 
+                                                style: { color: currentSong?.id === s.id ? PRIMARY : '#ffffff' }
                                             }, s.name),
                                             React.createElement('div', { 
-                                                className: `text-sm ${txtMuted}` 
+                                                className: `text-sm`,
+                                                style: { color: '#b3b3b3' }
                                             }, s.isUrl ? 'Streaming' : 'Local')
                                         ),
                                         React.createElement('button', {
@@ -1278,9 +1596,9 @@
                                 ) : React.createElement('div', { 
                                     style: { 
                                         textAlign: 'center', 
-                                        padding: '80px 20px' 
-                                    }, 
-                                    className: txtMuted 
+                                        padding: '80px 20px',
+                                        color: '#b3b3b3'
+                                    }
                                 },
                                     React.createElement('div', { className: 'text-xl mb-2' }, 'No tracks yet'),
                                     React.createElement('div', {}, 'Upload audio files or add streaming URLs')
@@ -1312,7 +1630,7 @@
                             onKeyPress: (e) => e.key === 'Enter' && handleCreate(),
                             autoFocus: true,
                             style: {
-                                background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)',
                                 border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
                                 color: darkMode ? '#fff' : '#1a1a1a'
                             }
@@ -1353,7 +1671,7 @@
                             onKeyPress: (e) => e.key === 'Enter' && handleUrlSubmit(),
                             autoFocus: true,
                             style: {
-                                background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                                background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)',
                                 border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
                                 color: darkMode ? '#fff' : '#1a1a1a'
                             }
@@ -1412,14 +1730,14 @@
                         }, 'Import Playlists'),
                         React.createElement('button', { 
                             onClick: () => setShowModal(null), 
-                            className: txtMuted, 
                             style: { 
                                 width: '100%', 
                                 background: 'none', 
                                 border: 'none', 
                                 cursor: 'pointer', 
                                 padding: '12px',
-                                fontSize: '14px'
+                                fontSize: '14px',
+                                color: '#b3b3b3'
                             } 
                         }, 'Close')
                     )
@@ -1437,7 +1755,8 @@
                             className: 'text-xl font-bold mb-4' 
                         }, 'Delete Playlist?'),
                         React.createElement('div', { 
-                            className: `mb-6 ${txtMuted}` 
+                            className: `mb-6`,
+                            style: { color: '#b3b3b3' }
                         }, 'This will delete all songs in this playlist. This action cannot be undone.'),
                         React.createElement('div', { 
                             className: 'flex gap-3', 
@@ -1476,7 +1795,8 @@
                             className: 'text-xl font-bold mb-4' 
                         }, 'Delete Track?'),
                         React.createElement('div', { 
-                            className: `mb-6 ${txtMuted}` 
+                            className: `mb-6`,
+                            style: { color: '#b3b3b3' }
                         }, 'This action cannot be undone.'),
                         React.createElement('div', { 
                             className: 'flex gap-3', 
@@ -1514,12 +1834,11 @@
                             style: { 
                                 flex: 1, 
                                 minWidth: '150px',
-                                color: darkMode ? '#ffffff' : '#1a1a1a'
+                                color: '#ffffff'
                             } 
                         }, currentSong.name),
                         React.createElement('div', { 
-                            className: txtMuted,
-                            style: { fontSize: '14px' }
+                            style: { fontSize: '14px', color: '#b3b3b3' }
                         }, formatTime(audioRef.current?.currentTime))
                     ),
                     
@@ -1568,7 +1887,7 @@
                                 className: 'icon-btn',
                                 style: { 
                                     opacity: repeat ? 1 : 0.5,
-                                    color: repeat ? PRIMARY : 'inherit'
+                                    color: repeat ? PRIMARY : '#ffffff'
                                 },
                                 title: 'Repeat'
                             }, React.createElement(Icons.Repeat))
@@ -1586,8 +1905,7 @@
                                 style: { width: '100px' }
                             }),
                             React.createElement('span', { 
-                                className: txtMuted,
-                                style: { minWidth: '40px', fontSize: '14px' }
+                                style: { minWidth: '40px', fontSize: '14px', color: '#b3b3b3' }
                             }, `${volume}%`)
                         )
                     )
