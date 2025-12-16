@@ -1475,19 +1475,30 @@
 
             const handleSongDragOver = (e, index) => {
                 e.preventDefault();
-                if (draggedSong === null || draggedSong === index) return;
+                
+                // For touch drag, use touchDragIndex; for mouse drag, use draggedSong
+                const currentDragIndex = touchDragIndex !== null ? touchDragIndex : draggedSong;
+                
+                if (currentDragIndex === null || currentDragIndex === index) {
+                    console.log('Skipping - already at this position or not dragging');
+                    return;
+                }
+                
+                console.log('handleSongDragOver executing: moving from', currentDragIndex, 'to', index);
                 
                 const playlist = playlists.find(p => p.id === activePlaylist);
                 if (!playlist) return;
                 
                 const newSongs = [...playlist.songs];
-                const draggedItem = newSongs[draggedSong];
-                newSongs.splice(draggedSong, 1);
+                const draggedItem = newSongs[currentDragIndex];
+                newSongs.splice(currentDragIndex, 1);
                 newSongs.splice(index, 0, draggedItem);
                 
                 playlist.songs = newSongs;
                 setPlaylists([...playlists]);
                 setDraggedSong(index);
+                
+                console.log('Reorder complete - new song order:', newSongs.map(s => s.name));
             };
 
             const handleSongDragEnd = async () => {
@@ -1567,12 +1578,18 @@
                 });
                 
                 console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
+                console.log('Are they different?', targetIndex !== touchDragIndex);
+                console.log('Target >= 0?', targetIndex >= 0);
+                console.log('Current songs length:', current?.songs?.length);
+                console.log('Target < length?', targetIndex < current?.songs.length);
                 
                 // If finger moved to a different position, reorder
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
-                    console.log('Reordering from', touchDragIndex, 'to', targetIndex);
+                    console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
                     setTouchDragIndex(targetIndex);
+                } else {
+                    console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
                 }
             };
             
