@@ -1502,9 +1502,17 @@
                 const touch = e.touches[0];
                 setTouchDragY(touch.clientY);
                 
+                // Store reference to the touched element
+                const touchedElement = e.currentTarget.parentElement;
+                
                 // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
+                    
+                    // Add visual feedback immediately via DOM
+                    touchedElement.style.opacity = '0.5';
+                    touchedElement.style.transform = 'scale(1.02)';
+                    
                     setTouchDragIndex(index);
                     setDraggedSong(index);
                     setIsDraggingTouch(true);
@@ -1554,6 +1562,13 @@
                 if (dragHandleTimer.current) {
                     clearTimeout(dragHandleTimer.current);
                 }
+                
+                // Remove visual feedback from all items
+                document.querySelectorAll('.song-item').forEach(el => {
+                    el.style.opacity = '';
+                    el.style.transform = '';
+                });
+                
                 setTouchDragY(null);
                 setTouchDragIndex(null);
                 setIsDraggingTouch(false);
