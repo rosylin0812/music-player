@@ -1706,39 +1706,39 @@
                                     key: p.id,
                                     onClick: () => openPlaylist(p.id),
                                     className: `playlist-grid-card ${card}`,
-                                        style: { 
-                                            ...(activePlaylist === p.id ? { 
-                                                borderColor: PRIMARY,
-                                                borderWidth: '2px',
-                                                borderStyle: 'solid'
-                                            } : {})
+                                    style: { 
+                                        ...(activePlaylist === p.id ? { 
+                                            borderColor: PRIMARY,
+                                            borderWidth: '2px',
+                                            borderStyle: 'solid'
+                                        } : {})
+                                    }
+                                },
+                                    React.createElement('button', {
+                                        className: 'grid-menu-btn icon-btn icon-btn-small',
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            setContextMenu({
+                                                x: e.clientX - 160,
+                                                y: e.clientY,
+                                                playlist: p
+                                            });
                                         }
-                                    },
-                                        React.createElement('button', {
-                                            className: 'grid-menu-btn icon-btn icon-btn-small',
-                                            onClick: (e) => {
-                                                e.stopPropagation();
-                                                setContextMenu({
-                                                    x: e.clientX - 160,
-                                                    y: e.clientY,
-                                                    playlist: p
-                                                });
-                                            }
-                                        }, React.createElement(Icons.MoreVertical)),
-                                        React.createElement('div', { 
-                                            style: { 
-                                                fontSize: '48px', 
-                                                marginBottom: '12px'
-                                            } 
-                                        }, React.createElement(Icons.Music)),
-                                        React.createElement('div', { 
-                                            className: 'font-bold truncate text-color',
-                                            style: { marginBottom: '4px' }
-                                        }, p.name),
-                                        React.createElement('div', { 
-                                            className: 'text-sm text-muted'
-                                        }, `${p.songs.length} tracks`)
-                                    ))
+                                    }, React.createElement(Icons.MoreVertical)),
+                                    React.createElement('div', { 
+                                        style: { 
+                                            fontSize: '48px', 
+                                            marginBottom: '12px'
+                                        } 
+                                    }, React.createElement(Icons.Music)),
+                                    React.createElement('div', { 
+                                        className: 'font-bold truncate text-color',
+                                        style: { marginBottom: '4px' }
+                                    }, p.name),
+                                    React.createElement('div', { 
+                                        className: 'text-sm text-muted'
+                                    }, `${p.songs.length} tracks`)
+                                ))
                                 )
                             )
                         ),
