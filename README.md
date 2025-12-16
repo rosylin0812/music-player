@@ -1,4 +1,4 @@
-### Music Player for Fan Bai (Dharma instrument) practice
+### Music Player for Fan Bai (Dharma instrument) Practice
 
 Link : https://fanbia.vercel.app/
 
