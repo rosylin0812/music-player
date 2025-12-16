@@ -147,14 +147,20 @@
             height: 32px;
         }
         
-        /* Light mode: black icons and button text */
+        /* Light mode: black icons and text */
         .bg-light .icon-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.15);
             color: #000000;
+        }
+        .bg-light .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
         }
         .bg-light .icon-btn svg {
             color: #000000;
             stroke: #000000;
         }
+        
         .bg-light .btn-secondary {
             color: #000000;
         }
@@ -862,8 +868,6 @@
             const [recentPlaylistId, setRecentPlaylistId] = useState(null);
             const [showDebug, setShowDebug] = useState(false);
             const [debugInfo, setDebugInfo] = useState({});
-            const [editingPlaylist, setEditingPlaylist] = useState(null);
-            const [editingPlaylistName, setEditingPlaylistName] = useState('');
             
             const audioRef = useRef(null);
             const fileInputRef = useRef(null);
@@ -1211,33 +1215,6 @@
                 }
                 setShowModal(null);
                 debugLog('Song deleted');
-            };
-
-            const startEditingPlaylist = (playlist) => {
-                setEditingPlaylist(playlist.id);
-                setEditingPlaylistName(playlist.name);
-            };
-
-            const saveEditingPlaylist = async () => {
-                if (!editingPlaylist || !editingPlaylistName.trim()) {
-                    setEditingPlaylist(null);
-                    return;
-                }
-                
-                const playlist = playlists.find(p => p.id === editingPlaylist);
-                if (playlist) {
-                    playlist.name = editingPlaylistName.trim();
-                    await DB.save('playlists', playlist);
-                    setPlaylists([...playlists]);
-                }
-                
-                setEditingPlaylist(null);
-                setEditingPlaylistName('');
-            };
-
-            const cancelEditingPlaylist = () => {
-                setEditingPlaylist(null);
-                setEditingPlaylistName('');
             };
 
             const exportData = () => {
@@ -1651,48 +1628,17 @@
                                 )
                             ),
                             
-                            // Current/Recent Playlist View with editable title
+                            // Current/Recent Playlist View
                             current && React.createElement('div', null,
                                 React.createElement('div', { className: 'flex items-center justify-between mb-6' },
-                                    React.createElement('div', { style: { flex: 1 } },
-                                        editingPlaylist === current.id ?
-                                            React.createElement('input', {
-                                                type: 'text',
-                                                value: editingPlaylistName,
-                                                onChange: (e) => setEditingPlaylistName(e.target.value),
-                                                onKeyDown: (e) => {
-                                                    if (e.key === 'Enter') saveEditingPlaylist();
-                                                    if (e.key === 'Escape') cancelEditingPlaylist();
-                                                },
-                                                onBlur: saveEditingPlaylist,
-                                                autoFocus: true,
-                                                className: 'song-name-edit',
-                                                style: { fontSize: '30px', marginBottom: '8px' },
-                                                onClick: (e) => e.stopPropagation()
-                                            })
-                                        :
-                                            React.createElement('div', null,
-                                                React.createElement('div', {
-                                                    className: 'flex items-center gap-3',
-                                                    style: { marginBottom: '8px' }
-                                                },
-                                                    React.createElement('div', { 
-                                                        className: 'text-3xl font-bold',
-                                                        style: { color: '#ffffff' }
-                                                    }, current.name),
-                                                    React.createElement('button', {
-                                                        onClick: (e) => {
-                                                            e.stopPropagation();
-                                                            startEditingPlaylist(current);
-                                                        },
-                                                        className: 'icon-btn icon-btn-small hide-mobile',
-                                                        title: 'Edit playlist name'
-                                                    }, React.createElement(Icons.Edit))
-                                                ),
-                                                React.createElement('div', { 
-                                                    style: { color: '#b3b3b3' }
-                                                }, `${current.songs.length} tracks`)
-                                            )
+                                    React.createElement('div', null,
+                                        React.createElement('div', { 
+                                            className: 'text-3xl font-bold mb-2',
+                                            style: { color: '#ffffff' }
+                                        }, current.name),
+                                        React.createElement('div', { 
+                                            style: { color: '#b3b3b3' }
+                                        }, `${current.songs.length} tracks`)
                                     ),
                                     React.createElement('button', {
                                         className: 'icon-btn',
