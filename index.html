@@ -401,7 +401,12 @@
             left: 0; 
             right: 0; 
             padding: 12px 20px; 
-            z-index: 50; 
+            z-index: 50;
+            background: #2a2a2a !important;
+        }
+        
+        .bg-light .player {
+            background: #e0e0e0 !important;
         }
         
         .player-controls {
@@ -1587,23 +1592,19 @@
                         React.createElement('div', { 
                             className: 'flex items-center justify-between' 
                         },
-                            React.createElement('div', { 
-                                className: 'text-2xl font-bold',
-                                className: 'text-color'
-                            }, 'Music'),
+                            React.createElement('button', {
+                                onClick: goToHome,
+                                className: 'btn-secondary',
+                                style: { display: 'flex', alignItems: 'center', gap: '8px' }
+                            },
+                                React.createElement(Icons.Home),
+                                React.createElement('span', {}, 'Home')
+                            ),
                             React.createElement('button', {
                                 onClick: () => setDarkMode(!darkMode),
                                 className: `icon-btn icon-btn-small`,
                                 'aria-label': 'Toggle theme'
                             }, darkMode ? React.createElement(Icons.Sun) : React.createElement(Icons.Moon))
-                        ),
-                        
-                        React.createElement('div', {
-                            onClick: goToHome,
-                            className: `home-btn ${card} ${view === 'home' ? 'active' : ''}`
-                        },
-                            React.createElement(Icons.Home),
-                            React.createElement('span', { className: 'text-color' }, 'Home')
                         ),
                         
                         React.createElement('button', { 
@@ -1706,7 +1707,7 @@
                                 React.createElement('div', { className: 'playlist-grid' },
                                     playlists.map(p => React.createElement('div', {
                                         key: p.id,
-                                        onClick: () => setActivePlaylist(p.id),
+                                        onClick: () => openPlaylist(p.id),
                                         className: `playlist-grid-card ${card}`,
                                         style: { 
                                             ...(activePlaylist === p.id ? { 
