@@ -1,6 +1,6 @@
 ### Music Player for Fan Bai (Dharma instrument) Practice
 
-Link : https://fanbia.vercel.app/
+Link : https://fanbaipractice.vercel.app/
 
 This modern web app is a dedicated music player for Fan Bai practice.
 
