@@ -312,6 +312,14 @@
             cursor: grabbing;
         }
         
+        /* Light mode drag handles */
+        .bg-light .drag-handle {
+            color: rgba(0, 0, 0, 0.3);
+        }
+        .bg-light .drag-handle:hover {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        
         /* Song item with drag */
         .song-item { 
             padding: 16px; 
@@ -406,7 +414,10 @@
         }
         
         .bg-light .player {
-            background: #e0e0e0 !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
         }
         
         /* Player bar buttons in light mode */
