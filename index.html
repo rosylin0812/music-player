@@ -1522,17 +1522,19 @@
             const handleSongTouchStart = (e, index) => {
                 e.preventDefault(); // Prevent text selection
                 console.log('Touch start on song index:', index);
+                const touch = e.touches[0];
+                setTouchDragY(touch.clientY);
                 
                 // Store reference to the touched element
                 const touchedElement = e.currentTarget.parentElement;
                 
-                // Long-press timer: wait 300ms before enabling drag
+                // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Simple visual feedback - just opacity and shadow (NO FOLLOWING FINGER)
+                    // Add visual feedback immediately via DOM
                     touchedElement.style.opacity = '0.5';
-                    touchedElement.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+                    touchedElement.style.transform = 'scale(1.02)';
                     
                     setTouchDragIndex(index);
                     setDraggedSong(index);
@@ -1558,29 +1560,22 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // NO FOLLOW FINGER ANIMATION - just detect position for reordering
-                
                 // Find which song item the finger is currently over
-                // Use CLOSEST CENTER approach - more reliable after reorders
+                const songElements = document.querySelectorAll('.song-item');
                 let targetIndex = touchDragIndex; // Default to current position
                 
                 console.log('Found', songElements.length, 'song items');
                 
-                // Find the item whose center is closest to the finger
-                let closestDistance = Infinity;
-                
                 songElements.forEach((element, idx) => {
                     const rect = element.getBoundingClientRect();
-                    const itemCenter = rect.top + rect.height / 2;
-                    const distance = Math.abs(fingerY - itemCenter);
+                    const itemMiddle = rect.top + rect.height / 2;
                     
-                    if (distance < closestDistance) {
-                        closestDistance = distance;
+                    // If finger is over this item's middle point
+                    if (fingerY >= rect.top && fingerY <= rect.bottom) {
                         targetIndex = idx;
+                        console.log('Finger over item', idx, 'at Y:', fingerY);
                     }
                 });
-                
-                console.log('Closest item to finger is index:', targetIndex, 'at distance:', closestDistance);
                 
                 console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
                 console.log('Are they different?', targetIndex !== touchDragIndex);
@@ -1603,10 +1598,10 @@
                     clearTimeout(dragHandleTimer.current);
                 }
                 
-                // Simple cleanup - remove visual effects
+                // Remove visual feedback from all items
                 document.querySelectorAll('.song-item').forEach(el => {
                     el.style.opacity = '';
-                    el.style.boxShadow = '';
+                    el.style.transform = '';
                 });
                 
                 setTouchDragY(null);
