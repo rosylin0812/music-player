@@ -1467,6 +1467,58 @@
             const handleSongDragEnd = () => {
                 setDraggedSong(null);
             };
+            
+            // Touch drag for mobile
+            const [touchDragY, setTouchDragY] = useState(null);
+            const [touchDragIndex, setTouchDragIndex] = useState(null);
+            const dragHandleTimer = useRef(null);
+            const [isDraggingTouch, setIsDraggingTouch] = useState(false);
+            
+            const handleSongTouchStart = (e, index) => {
+                const touch = e.touches[0];
+                setTouchDragY(touch.clientY);
+                
+                // Long-press timer: wait 500ms before enabling drag
+                dragHandleTimer.current = setTimeout(() => {
+                    setTouchDragIndex(index);
+                    setDraggedSong(index);
+                    setIsDraggingTouch(true);
+                }, 500);
+            };
+            
+            const handleSongTouchMove = (e, index) => {
+                if (!isDraggingTouch || touchDragIndex === null) {
+                    // Cancel long-press if user moves before 500ms
+                    if (dragHandleTimer.current) {
+                        clearTimeout(dragHandleTimer.current);
+                    }
+                    return;
+                }
+                
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                const deltaY = touch.clientY - touchDragY;
+                
+                // Determine new position based on movement
+                if (Math.abs(deltaY) > 50) { // Threshold for reordering
+                    const newIndex = deltaY > 0 ? index + 1 : index - 1;
+                    if (newIndex >= 0 && newIndex < current?.songs.length) {
+                        handleSongDragOver(e, newIndex);
+                        setTouchDragY(touch.clientY);
+                    }
+                }
+            };
+            
+            const handleSongTouchEnd = () => {
+                if (dragHandleTimer.current) {
+                    clearTimeout(dragHandleTimer.current);
+                }
+                setTouchDragY(null);
+                setTouchDragIndex(null);
+                setIsDraggingTouch(false);
+                handleSongDragEnd();
+            };
 
             const current = playlists.find(p => p.id === activePlaylist);
             const recentPlaylist = playlists.find(p => p.id === recentPlaylistId);
@@ -1891,27 +1943,18 @@
                                         onDragOver: (e) => editingSong !== s.id && handleSongDragOver(e, i),
                                         onDragEnd: handleSongDragEnd,
                                         onClick: () => editingSong !== s.id && playSong(s, current.id),
-                                        onTouchStart: () => editingSong !== s.id && handleSongLongPressStart(s),
-                                        onTouchEnd: handleSongLongPressEnd,
-                                        onTouchMove: handleSongLongPressEnd,
                                         className: `song-item ${card} ${currentSong?.id === s.id ? 'active' : ''} ${draggedSong === i ? 'dragging' : ''}`,
                                         style: { 
                                             marginBottom: '8px',
                                             ...(currentSong?.id === s.id ? { background: `${PRIMARY}20` } : {})
                                         }
                                     },
-                                        React.createElement('div', { className: 'drag-handle' }, React.createElement(Icons.GripVertical)),
                                         React.createElement('div', { 
-                                            className: 'text-color',
-                                            style: { 
-                                                width: '40px', 
-                                                textAlign: 'center', 
-                                                fontWeight: 'bold',
-                                                flexShrink: 0
-                                            } 
-                                        }, currentSong?.id === s.id && isPlaying ? 
-                                            React.createElement(Icons.Music) : i + 1
-                                        ),
+                                            className: 'drag-handle',
+                                            onTouchStart: (e) => editingSong !== s.id && handleSongTouchStart(e, i),
+                                            onTouchMove: (e) => editingSong !== s.id && handleSongTouchMove(e, i),
+                                            onTouchEnd: handleSongTouchEnd
+                                        }, React.createElement(Icons.GripVertical)),
                                         React.createElement('div', { style: { flex: 1, minWidth: 0 } },
                                             editingSong === s.id ?
                                                 React.createElement('input', {
@@ -1943,7 +1986,7 @@
                                                 e.stopPropagation();
                                                 startEditingSong(s);
                                             },
-                                            className: 'icon-btn icon-btn-small hide-mobile',
+                                            className: 'icon-btn icon-btn-small',
                                             title: 'Edit song name'
                                         }, React.createElement(Icons.Edit)),
                                         React.createElement('button', {
