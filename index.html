@@ -420,7 +420,7 @@
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
         }
         
-        /* Player bar buttons in light mode */
+        /* Player bar buttons in light mode - keep BLACK */
         .bg-light .player .icon-btn {
             color: #000000 !important;
         }
@@ -436,6 +436,21 @@
             color: #000000 !important;
             stroke: #000000 !important;
             fill: #000000 !important;
+        }
+        
+        /* Player bar text (song name, time) - make WHITE in light mode */
+        .bg-light .player .player-info {
+            color: #ffffff !important;
+        }
+        .bg-light .player .player-info * {
+            color: #ffffff !important;
+        }
+        
+        /* Volume icon - make WHITE in light mode */
+        .bg-light .player .player-volume svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
         }
         
         .player-controls {
