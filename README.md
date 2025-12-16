@@ -36,6 +36,6 @@ Once the music player is deployed to a live link (like the Vercel URL above), fo
 
 Once installed, the app works **completely offline**! You can:
 
-* Upload your dharma instrument recordings.
+* Upload your Buddhist chanting audio files.
 * Manage and edit all your playlists.
 * Play all local songs *without* needing an internet connection.
