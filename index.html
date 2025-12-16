@@ -878,6 +878,8 @@
             const [debugInfo, setDebugInfo] = useState({});
             const [editingPlaylist, setEditingPlaylist] = useState(null);
             const [editingPlaylistName, setEditingPlaylistName] = useState('');
+            const [editingSong, setEditingSong] = useState(null);
+            const [editingSongName, setEditingSongName] = useState('');
             
             const audioRef = useRef(null);
             const fileInputRef = useRef(null);
@@ -1297,6 +1299,49 @@
             };
 
             const handlePlaylistLongPressEnd = () => {
+                if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                }
+            };
+
+            const startEditingSong = (song) => {
+                setEditingSong(song.id);
+                setEditingSongName(song.name);
+            };
+
+            const saveEditingSong = async () => {
+                if (!editingSong || !editingSongName.trim()) {
+                    setEditingSong(null);
+                    return;
+                }
+                
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (playlist) {
+                    const song = playlist.songs.find(s => s.id === editingSong);
+                    if (song) {
+                        song.name = editingSongName.trim();
+                        await DB.save('playlists', playlist);
+                        setPlaylists([...playlists]);
+                        debugLog('Song name updated:', editingSongName);
+                    }
+                }
+                
+                setEditingSong(null);
+                setEditingSongName('');
+            };
+
+            const cancelEditingSong = () => {
+                setEditingSong(null);
+                setEditingSongName('');
+            };
+
+            const handleSongLongPressStart = (song) => {
+                longPressTimer.current = setTimeout(() => {
+                    startEditingSong(song);
+                }, 500);
+            };
+
+            const handleSongLongPressEnd = () => {
                 if (longPressTimer.current) {
                     clearTimeout(longPressTimer.current);
                 }
@@ -1761,15 +1806,18 @@
                                     )
                                 ),
                                 
-                                // Song list
+                                // Song list - EDITABLE
                                 current.songs.length > 0 ? current.songs.map((s, i) => 
                                     React.createElement('div', {
                                         key: s.id,
-                                        draggable: true,
-                                        onDragStart: (e) => handleSongDragStart(e, i),
-                                        onDragOver: (e) => handleSongDragOver(e, i),
+                                        draggable: editingSong !== s.id,
+                                        onDragStart: (e) => editingSong !== s.id && handleSongDragStart(e, i),
+                                        onDragOver: (e) => editingSong !== s.id && handleSongDragOver(e, i),
                                         onDragEnd: handleSongDragEnd,
-                                        onClick: () => playSong(s, current.id),
+                                        onClick: () => editingSong !== s.id && playSong(s, current.id),
+                                        onTouchStart: () => editingSong !== s.id && handleSongLongPressStart(s),
+                                        onTouchEnd: handleSongLongPressEnd,
+                                        onTouchMove: handleSongLongPressEnd,
                                         className: `song-item ${card} ${currentSong?.id === s.id ? 'active' : ''} ${draggedSong === i ? 'dragging' : ''}`,
                                         style: { 
                                             marginBottom: '8px',
@@ -1789,14 +1837,39 @@
                                             React.createElement(Icons.Music) : i + 1
                                         ),
                                         React.createElement('div', { style: { flex: 1, minWidth: 0 } },
-                                            React.createElement('div', { 
-                                                className: 'font-bold truncate text-color', 
-                                                style: currentSong?.id === s.id ? { color: PRIMARY } : {}
-                                            }, s.name),
-                                            React.createElement('div', { 
-                                                className: 'text-sm text-muted'
-                                            }, s.isUrl ? 'Streaming' : 'Local')
+                                            editingSong === s.id ?
+                                                React.createElement('input', {
+                                                    type: 'text',
+                                                    value: editingSongName,
+                                                    onChange: (e) => setEditingSongName(e.target.value),
+                                                    onKeyDown: (e) => {
+                                                        if (e.key === 'Enter') saveEditingSong();
+                                                        if (e.key === 'Escape') cancelEditingSong();
+                                                    },
+                                                    onBlur: saveEditingSong,
+                                                    autoFocus: true,
+                                                    className: 'song-name-edit',
+                                                    onClick: (e) => e.stopPropagation()
+                                                })
+                                            :
+                                                React.createElement('div', null,
+                                                    React.createElement('div', { 
+                                                        className: 'font-bold truncate text-color', 
+                                                        style: currentSong?.id === s.id ? { color: PRIMARY } : {}
+                                                    }, s.name),
+                                                    React.createElement('div', { 
+                                                        className: 'text-sm text-muted'
+                                                    }, s.isUrl ? 'Streaming' : 'Local')
+                                                )
                                         ),
+                                        editingSong !== s.id && React.createElement('button', {
+                                            onClick: (e) => {
+                                                e.stopPropagation();
+                                                startEditingSong(s);
+                                            },
+                                            className: 'icon-btn icon-btn-small hide-mobile',
+                                            title: 'Edit song name'
+                                        }, React.createElement(Icons.Edit)),
                                         React.createElement('button', {
                                             onClick: (e) => { 
                                                 e.stopPropagation(); 
