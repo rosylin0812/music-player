@@ -1528,13 +1528,21 @@
                 // Store reference to the touched element
                 const touchedElement = e.currentTarget.parentElement;
                 
+                // Store initial position of the element
+                const initialRect = touchedElement.getBoundingClientRect();
+                touchedElement.dataset.initialTop = initialRect.top;
+                touchedElement.dataset.initialY = touch.clientY;
+                
                 // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Add visual feedback immediately via DOM
+                    // Add visual feedback immediately via DOM - MORE VISIBLE
                     touchedElement.style.opacity = '0.5';
-                    touchedElement.style.transform = 'scale(1.02)';
+                    touchedElement.style.transform = 'scale(1.15)';
+                    touchedElement.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.4)';
+                    touchedElement.style.zIndex = '1000';
+                    touchedElement.style.transition = 'none'; // Remove transition for instant follow
                     
                     setTouchDragIndex(index);
                     setDraggedSong(index);
@@ -1560,8 +1568,16 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // Find which song item the finger is currently over
+                // Make the dragged item follow the finger
                 const songElements = document.querySelectorAll('.song-item');
+                const draggedElement = songElements[touchDragIndex];
+                if (draggedElement) {
+                    const initialY = parseFloat(draggedElement.dataset.initialY);
+                    const deltaY = fingerY - initialY;
+                    draggedElement.style.transform = `scale(1.15) translateY(${deltaY}px)`;
+                }
+                
+                // Find which song item the finger is currently over
                 let targetIndex = touchDragIndex; // Default to current position
                 
                 console.log('Found', songElements.length, 'song items');
@@ -1598,10 +1614,15 @@
                     clearTimeout(dragHandleTimer.current);
                 }
                 
-                // Remove visual feedback from all items
+                // Remove visual feedback from all items and reset positions
                 document.querySelectorAll('.song-item').forEach(el => {
                     el.style.opacity = '';
                     el.style.transform = '';
+                    el.style.boxShadow = '';
+                    el.style.zIndex = '';
+                    el.style.transition = '';
+                    delete el.dataset.initialTop;
+                    delete el.dataset.initialY;
                 });
                 
                 setTouchDragY(null);
