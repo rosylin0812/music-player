@@ -1520,15 +1520,18 @@
             };
             
             const handleSongTouchMove = (e, index) => {
+                console.log('TouchMove fired! isDraggingTouch:', isDraggingTouch, 'touchDragIndex:', touchDragIndex);
+                
                 if (!isDraggingTouch || touchDragIndex === null) {
                     // Cancel long-press if user moves before 300ms
                     if (dragHandleTimer.current) {
                         clearTimeout(dragHandleTimer.current);
+                        console.log('Cancelled long-press because moved too early');
                     }
                     return;
                 }
                 
-                console.log('Touch move - isDragging:', isDraggingTouch, 'touchDragIndex:', touchDragIndex);
+                console.log('Touch move - ACTIVE DRAG');
                 e.preventDefault();
                 
                 const touch = e.touches[0];
@@ -1538,6 +1541,8 @@
                 const songElements = document.querySelectorAll('.song-item');
                 let targetIndex = touchDragIndex; // Default to current position
                 
+                console.log('Found', songElements.length, 'song items');
+                
                 songElements.forEach((element, idx) => {
                     const rect = element.getBoundingClientRect();
                     const itemMiddle = rect.top + rect.height / 2;
@@ -1545,6 +1550,7 @@
                     // If finger is over this item's middle point
                     if (fingerY >= rect.top && fingerY <= rect.bottom) {
                         targetIndex = idx;
+                        console.log('Finger over item', idx, 'at Y:', fingerY);
                     }
                 });
                 
