@@ -174,11 +174,12 @@
         }
         .bg-light .btn-secondary {
             background: rgba(0, 0, 0, 0.08);
-            border: 1px solid rgba(0, 0, 0, 0.15);
+            border: 2px solid rgba(0, 0, 0, 0.5);
             color: #000000 !important;
         }
         .bg-light .btn-secondary:hover {
             background: rgba(0, 0, 0, 0.12);
+            border: 2px solid rgba(0, 0, 0, 0.6);
         }
         
         /* Layout */
@@ -1720,8 +1721,22 @@
                     },
                     onEnded: () => {
                         if (repeat) {
-                            audioRef.current.currentTime = 0;
-                            audioRef.current.play();
+                            // Mobile-friendly repeat: handle play promise
+                            if (audioRef.current) {
+                                audioRef.current.currentTime = 0;
+                                const playPromise = audioRef.current.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.catch(err => {
+                                        console.log('Repeat play error (mobile):', err);
+                                        // Try again after a brief delay for mobile
+                                        setTimeout(() => {
+                                            if (audioRef.current) {
+                                                audioRef.current.play().catch(e => console.log('Retry failed:', e));
+                                            }
+                                        }, 100);
+                                    });
+                                }
+                            }
                         } else {
                             playNext();
                         }
@@ -2224,7 +2239,8 @@
                                 width: '100%', 
                                 display: 'block', 
                                 textAlign: 'center',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                color: darkMode ? '#ffffff' : '#000000'
                             } 
                         }, 'Import Playlists'),
                         React.createElement('button', { 
