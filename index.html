@@ -1075,13 +1075,10 @@
                     debugLog('Creating playlist:', modalInput);
                     const id = Date.now();
                     const newPlaylist = { id, name: modalInput.trim(), songs: [] };
-                    
                     await DB.save('playlists', newPlaylist);
-                    
                     setPlaylists([...playlists, newPlaylist]);
                     openPlaylist(id);
                     setShowModal(null);
-                    
                     debugLog('Playlist created and saved');
                 }
             };
@@ -1601,7 +1598,6 @@
                             }, darkMode ? React.createElement(Icons.Sun) : React.createElement(Icons.Moon))
                         ),
                         
-                        // Home Button
                         React.createElement('div', {
                             onClick: goToHome,
                             className: `home-btn ${card} ${view === 'home' ? 'active' : ''}`
@@ -1610,7 +1606,6 @@
                             React.createElement('span', { className: 'text-color' }, 'Home')
                         ),
                         
-                        // Action buttons
                         React.createElement('button', { 
                             onClick: createPlaylist, 
                             className: 'btn-primary' 
@@ -1700,7 +1695,10 @@
                         // Main content with grid + recent playlist
                         React.createElement('div', { className: 'p-8' },
                             // Playlist Grid
-                            React.createElement('div', { className: 'mb-8' },
+                            React.createElement('div', { 
+                                className: 'mb-8',
+                                style: { display: view === 'home' ? 'block' : 'none' }
+                            },
                                 React.createElement('div', { 
                                     className: 'text-2xl font-bold mb-4',
                                     className: 'text-color'
@@ -1747,10 +1745,18 @@
                             ),
                             
                             // Current/Recent Playlist View
-                            current && React.createElement('div', null,
+                            current && React.createElement('div', { 
+                                style: { display: view === 'playlist' ? 'block' : 'none' }
+                            },
                                 React.createElement('div', { className: 'flex items-center justify-between mb-6' },
-                                    React.createElement('div', { style: { flex: 1 } },
-                                        editingPlaylist === current.id ?
+                                    React.createElement('div', { className: 'flex items-center gap-4', style: { flex: 1 } },
+                                        React.createElement('button', {
+                                            onClick: goToHome,
+                                            className: 'icon-btn',
+                                            title: 'Back to Home'
+                                        }, React.createElement(Icons.ArrowLeft)),
+                                        React.createElement('div', { style: { flex: 1 } },
+                                            editingPlaylist === current.id ?
                                             React.createElement('input', {
                                                 type: 'text',
                                                 value: editingPlaylistName,
@@ -1790,6 +1796,7 @@
                                                     className: 'text-muted'
                                                 }, `${current.songs.length} tracks`)
                                             )
+                                        )
                                     ),
                                     React.createElement('button', {
                                         className: 'icon-btn',
