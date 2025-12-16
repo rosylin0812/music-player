@@ -149,6 +149,24 @@
             height: 32px;
         }
         
+        /* Light mode: black icons and text */
+        .bg-light .icon-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            color: #000000;
+        }
+        .bg-light .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .bg-light .icon-btn svg {
+            color: #000000;
+            stroke: #000000;
+        }
+        
+        .bg-light .btn-secondary {
+            color: #000000;
+        }
+        
         /* Layout */
         .container { 
             display: flex; 
@@ -915,6 +933,12 @@
             const [editingName, setEditingName] = useState(''); // Temporary name while editing
             
             // ============================================
+            // STATE: Editing Playlist Names
+            // ============================================
+            const [editingPlaylist, setEditingPlaylist] = useState(null); // ID of playlist being edited
+            const [editingPlaylistName, setEditingPlaylistName] = useState(''); // Temporary playlist name
+            
+            // ============================================
             // STATE: Debug
             // ============================================
             const [showDebug, setShowDebug] = useState(false);
@@ -1335,6 +1359,52 @@
             };
 
             // ============================================
+            // PLAYLIST NAME EDITING FUNCTIONS
+            // ============================================
+            const startEditingPlaylist = (playlist) => {
+                setEditingPlaylist(playlist.id);
+                setEditingPlaylistName(playlist.name);
+                debugLog('Started editing playlist:', playlist.name);
+            };
+
+            const saveEditingPlaylist = async () => {
+                if (!editingPlaylist || !editingPlaylistName.trim()) {
+                    setEditingPlaylist(null);
+                    return;
+                }
+                
+                const playlist = playlists.find(p => p.id === editingPlaylist);
+                if (playlist) {
+                    playlist.name = editingPlaylistName.trim();
+                    await DB.save('playlists', playlist);
+                    setPlaylists([...playlists]);
+                    debugLog('Playlist name updated:', editingPlaylistName);
+                }
+                
+                setEditingPlaylist(null);
+                setEditingPlaylistName('');
+            };
+
+            const cancelEditingPlaylist = () => {
+                setEditingPlaylist(null);
+                setEditingPlaylistName('');
+                debugLog('Cancelled editing playlist');
+            };
+
+            // Long press handlers for mobile playlist editing
+            const handlePlaylistLongPressStart = (playlist) => {
+                longPressTimer.current = setTimeout(() => {
+                    startEditingPlaylist(playlist);
+                }, LONG_PRESS_DURATION);
+            };
+
+            const handlePlaylistLongPressEnd = () => {
+                if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                }
+            };
+
+            // ============================================
             // EXPORT/IMPORT FUNCTIONS
             // ============================================
             const exportData = () => {
@@ -1745,38 +1815,74 @@
                             )
                         ),
                         
-                        // PLAYLIST VIEW: Back button + songs
+                        // PLAYLIST VIEW: Back button + editable title + songs
                         view === 'playlist' && current && React.createElement('div', { className: 'p-8' },
                             React.createElement('div', { className: 'flex items-center justify-between mb-6' },
-                                React.createElement('div', { className: 'flex items-center gap-4' },
+                                React.createElement('div', { className: 'flex items-center gap-4', style: { flex: 1 } },
                                     React.createElement('button', {
                                         onClick: goToHome,
                                         className: 'icon-btn',
                                         title: 'Back to Home'
                                     }, React.createElement(Icons.ArrowLeft)),
-                                    React.createElement('div', null,
-                                        React.createElement('div', { 
-                                            className: 'text-3xl font-bold mb-2 text-color'
-                                        }, current.name),
-                                        React.createElement('div', { 
-                                            className: 'text-muted'
-                                        }, `${current.songs.length} tracks`)
-                                    ),
-                                    React.createElement('button', {
-                                        className: 'icon-btn',
-                                        onClick: (e) => {
-                                            e.stopPropagation();
-                                            setContextMenu({
-                                                x: e.clientX - 160,
-                                                y: e.clientY,
-                                                playlist: current
-                                            });
-                                        }
-                                    }, React.createElement(Icons.MoreVertical))
+                                    React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+                                        editingPlaylist === current.id ?
+                                            React.createElement('input', {
+                                                type: 'text',
+                                                value: editingPlaylistName,
+                                                onChange: (e) => setEditingPlaylistName(e.target.value),
+                                                onKeyDown: (e) => {
+                                                    if (e.key === 'Enter') saveEditingPlaylist();
+                                                    if (e.key === 'Escape') cancelEditingPlaylist();
+                                                },
+                                                onBlur: saveEditingPlaylist,
+                                                autoFocus: true,
+                                                className: 'song-name-edit',
+                                                style: { fontSize: '30px', marginBottom: '8px' },
+                                                onClick: (e) => e.stopPropagation()
+                                            })
+                                        :
+                                            React.createElement('div', {
+                                                onTouchStart: () => handlePlaylistLongPressStart(current),
+                                                onTouchEnd: handlePlaylistLongPressEnd,
+                                                onTouchMove: handlePlaylistLongPressEnd
+                                            },
+                                                React.createElement('div', { 
+                                                    className: 'flex items-center gap-3',
+                                                    style: { marginBottom: '8px' }
+                                                },
+                                                    React.createElement('div', {
+                                                        className: 'text-3xl font-bold text-color'
+                                                    }, current.name),
+                                                    editingPlaylist !== current.id && React.createElement('button', {
+                                                        onClick: (e) => {
+                                                            e.stopPropagation();
+                                                            startEditingPlaylist(current);
+                                                        },
+                                                        className: 'icon-btn icon-btn-small hide-mobile',
+                                                        title: 'Edit playlist name'
+                                                    }, React.createElement(Icons.Edit))
+                                                ),
+                                                React.createElement('div', { 
+                                                    className: 'text-muted'
+                                                }, `${current.songs.length} tracks`)
+                                            )
+                                    )
                                 ),
-                                
-                                // Action buttons
-                                React.createElement('div', { 
+                                React.createElement('button', {
+                                    className: 'icon-btn',
+                                    onClick: (e) => {
+                                        e.stopPropagation();
+                                        setContextMenu({
+                                            x: e.clientX - 160,
+                                            y: e.clientY,
+                                            playlist: current
+                                        });
+                                    }
+                                }, React.createElement(Icons.MoreVertical))
+                            ),
+                            
+                            // Action buttons
+                            React.createElement('div', { 
                                     className: 'flex gap-4 mb-6',
                                     style: { flexWrap: 'wrap' }
                                 },
