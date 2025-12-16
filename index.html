@@ -2192,15 +2192,19 @@
                         className: 'player-info'
                     },
                         React.createElement('div', { 
-                            className: 'font-bold truncate text-color', 
+                            className: 'font-bold truncate', 
                             style: { 
                                 flex: 1, 
-                                minWidth: '120px'
+                                minWidth: '120px',
+                                color: darkMode ? '#ffffff' : '#ffffff'
                             } 
                         }, currentSong.name),
                         React.createElement('div', { 
-                            className: 'text-muted',
-                            style: { fontSize: '13px', flexShrink: 0 }
+                            style: { 
+                                fontSize: '13px', 
+                                flexShrink: 0,
+                                color: darkMode ? '#b3b3b3' : '#ffffff'
+                            }
                         }, formatTime(audioRef.current?.currentTime))
                     ),
                     
@@ -2261,7 +2265,9 @@
                         React.createElement('div', { 
                             className: 'flex items-center gap-3 hide-mobile' 
                         },
-                            React.createElement(Icons.Volume),
+                            React.createElement('div', {
+                                style: { color: darkMode ? '#ffffff' : '#ffffff' }
+                            }, React.createElement(Icons.Volume)),
                             React.createElement('input', {
                                 type: 'range',
                                 min: 0,
@@ -2271,7 +2277,11 @@
                                 style: { width: '100px' }
                             }),
                             React.createElement('span', { 
-                                style: { minWidth: '40px', fontSize: '14px', color: '#b3b3b3' }
+                                style: { 
+                                    minWidth: '40px', 
+                                    fontSize: '14px', 
+                                    color: darkMode ? '#b3b3b3' : '#ffffff'
+                                }
                             }, `${volume}%`)
                         )
                     )
