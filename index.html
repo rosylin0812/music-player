@@ -1526,21 +1526,13 @@
                 // Store reference to the touched element
                 const touchedElement = e.currentTarget.parentElement;
                 
-                // Store the natural Y position BEFORE any transforms (to prevent vibration)
-                const naturalRect = touchedElement.getBoundingClientRect();
-                touchedElement.dataset.naturalY = naturalRect.top;
-                touchedElement.dataset.itemHeight = naturalRect.height;
-                console.log('Stored natural Y:', naturalRect.top, 'height:', naturalRect.height);
-                
                 // Long-press timer: wait 300ms before enabling drag
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Add visual feedback immediately via DOM - FLOATING EFFECT
-                    touchedElement.style.opacity = '1.0'; // Fully visible
-                    touchedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)'; // Big shadow for floating
-                    touchedElement.style.zIndex = '1000';
-                    touchedElement.style.transition = 'none'; // Remove transition for instant follow
+                    // Simple visual feedback - just opacity and shadow (NO FOLLOWING FINGER)
+                    touchedElement.style.opacity = '0.5';
+                    touchedElement.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
                     
                     setTouchDragIndex(index);
                     setDraggedSong(index);
@@ -1566,20 +1558,7 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // Make the dragged item follow the finger using STORED natural position
-                const songElements = document.querySelectorAll('.song-item');
-                const draggedElement = songElements[touchDragIndex];
-                if (draggedElement && draggedElement.dataset.naturalY) {
-                    // Use the stored natural Y position (doesn't change as item moves)
-                    const storedNaturalY = parseFloat(draggedElement.dataset.naturalY);
-                    const itemHeight = parseFloat(draggedElement.dataset.itemHeight);
-                    
-                    // Calculate offset to center item on finger
-                    const offset = fingerY - storedNaturalY - (itemHeight / 2);
-                    
-                    draggedElement.style.transform = `translateY(${offset}px)`;
-                    console.log('Using stored naturalY:', storedNaturalY, 'Finger Y:', fingerY, 'Offset:', offset);
-                }
+                // NO FOLLOW FINGER ANIMATION - just detect position for reordering
                 
                 // Find which song item the finger is currently over
                 // Use CLOSEST CENTER approach - more reliable after reorders
@@ -1613,33 +1592,6 @@
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
                     console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
-                    
-                    // Update naturalY after reorder to keep reference accurate
-                    setTimeout(() => {
-                        const newSongElements = document.querySelectorAll('.song-item');
-                        const newDraggedElement = newSongElements[targetIndex];
-                        if (newDraggedElement) {
-                            // Store the NEW natural position after reorder
-                            const newRect = newDraggedElement.getBoundingClientRect();
-                            // Calculate where it SHOULD be without the current transform
-                            const currentTransform = newDraggedElement.style.transform;
-                            const match = currentTransform.match(/translateY\(([-\d.]+)px\)/);
-                            const currentOffset = match ? parseFloat(match[1]) : 0;
-                            
-                            // New natural Y = current position - current offset
-                            const newNaturalY = newRect.top - currentOffset;
-                            newDraggedElement.dataset.naturalY = newNaturalY;
-                            
-                            console.log('Updated naturalY to:', newNaturalY, 'after reorder to index', targetIndex);
-                            
-                            // Keep floating effect
-                            newDraggedElement.style.opacity = '1.0';
-                            newDraggedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
-                            newDraggedElement.style.zIndex = '1000';
-                            newDraggedElement.style.transition = 'none';
-                        }
-                    }, 0);
-                    
                     setTouchDragIndex(targetIndex);
                 } else {
                     console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
@@ -1651,23 +1603,10 @@
                     clearTimeout(dragHandleTimer.current);
                 }
                 
-                // Add smooth spring animation when releasing
+                // Simple cleanup - remove visual effects
                 document.querySelectorAll('.song-item').forEach(el => {
-                    // Add spring animation for smooth snap back
-                    el.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; // Spring effect
                     el.style.opacity = '';
-                    el.style.transform = '';
                     el.style.boxShadow = '';
-                    el.style.zIndex = '';
-                    
-                    // Clean up stored data
-                    delete el.dataset.naturalY;
-                    delete el.dataset.itemHeight;
-                    
-                    // Remove transition after animation completes
-                    setTimeout(() => {
-                        el.style.transition = '';
-                    }, 300);
                 });
                 
                 setTouchDragY(null);
