@@ -1537,10 +1537,9 @@
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Add visual feedback immediately via DOM - FLOATING EFFECT
-                    touchedElement.style.opacity = '1.0'; // Fully visible, not ghostly!
-                    touchedElement.style.transform = 'scale(1.15) rotate(2deg)'; // Slight rotation for dynamic feel
-                    touchedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)'; // Bigger shadow
+                    // Add visual feedback immediately via DOM - FLOATING EFFECT (no rotation, original size)
+                    touchedElement.style.opacity = '1.0'; // Fully visible
+                    touchedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)'; // Big shadow for floating
                     touchedElement.style.zIndex = '1000';
                     touchedElement.style.transition = 'none'; // Remove transition for instant follow
                     
@@ -1568,13 +1567,13 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // Make the dragged item follow the finger
+                // Make the dragged item follow the finger (original size, just moves up/down)
                 const songElements = document.querySelectorAll('.song-item');
                 const draggedElement = songElements[touchDragIndex];
                 if (draggedElement) {
                     const initialY = parseFloat(draggedElement.dataset.initialY);
                     const deltaY = fingerY - initialY;
-                    draggedElement.style.transform = `scale(1.15) rotate(2deg) translateY(${deltaY}px)`;
+                    draggedElement.style.transform = `translateY(${deltaY}px)`; // Just move, no scale/rotate
                 }
                 
                 // Find which song item the finger is currently over
