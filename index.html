@@ -1617,6 +1617,24 @@
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
                     console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
+                    
+                    // FIX: Reset the reference point after reordering to keep item under finger
+                    setTimeout(() => {
+                        const newSongElements = document.querySelectorAll('.song-item');
+                        const newDraggedElement = newSongElements[targetIndex];
+                        if (newDraggedElement) {
+                            // Update the initial Y to current finger position
+                            newDraggedElement.dataset.initialY = fingerY;
+                            // Reset transform to 0 since we're starting from new position
+                            newDraggedElement.style.transform = 'translateY(0px)';
+                            // Keep the floating effect
+                            newDraggedElement.style.opacity = '1.0';
+                            newDraggedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
+                            newDraggedElement.style.zIndex = '1000';
+                            console.log('Reset reference point to fingerY:', fingerY);
+                        }
+                    }, 0);
+                    
                     setTouchDragIndex(targetIndex);
                 } else {
                     console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
