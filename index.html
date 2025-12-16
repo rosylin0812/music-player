@@ -1478,7 +1478,15 @@
                 setDraggedSong(index);
             };
 
-            const handleSongDragEnd = () => {
+            const handleSongDragEnd = async () => {
+                // Save the reordered playlist to database
+                if (draggedSong !== null && activePlaylist) {
+                    const playlist = playlists.find(p => p.id === activePlaylist);
+                    if (playlist) {
+                        await DB.save('playlists', playlist);
+                        debugLog('Song order saved to DB');
+                    }
+                }
                 setDraggedSong(null);
             };
             
@@ -1493,12 +1501,12 @@
                 const touch = e.touches[0];
                 setTouchDragY(touch.clientY);
                 
-                // Long-press timer: wait 500ms before enabling drag
+                // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
                 dragHandleTimer.current = setTimeout(() => {
                     setTouchDragIndex(index);
                     setDraggedSong(index);
                     setIsDraggingTouch(true);
-                }, 500);
+                }, 300);
             };
             
             const handleSongTouchMove = (e, index) => {
@@ -1513,15 +1521,26 @@
                 e.preventDefault();
                 
                 const touch = e.touches[0];
-                const deltaY = touch.clientY - touchDragY;
+                const fingerY = touch.clientY;
                 
-                // Determine new position based on movement
-                if (Math.abs(deltaY) > 50) { // Threshold for reordering
-                    const newIndex = deltaY > 0 ? index + 1 : index - 1;
-                    if (newIndex >= 0 && newIndex < current?.songs.length) {
-                        handleSongDragOver(e, newIndex);
-                        setTouchDragY(touch.clientY);
+                // Find which song item the finger is currently over
+                const songElements = document.querySelectorAll('.song-item');
+                let targetIndex = touchDragIndex; // Default to current position
+                
+                songElements.forEach((element, idx) => {
+                    const rect = element.getBoundingClientRect();
+                    const itemMiddle = rect.top + rect.height / 2;
+                    
+                    // If finger is over this item's middle point
+                    if (fingerY >= rect.top && fingerY <= rect.bottom) {
+                        targetIndex = idx;
                     }
+                });
+                
+                // If finger moved to a different position, reorder
+                if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
+                    handleSongDragOver(e, targetIndex);
+                    setTouchDragIndex(targetIndex);
                 }
             };
             
