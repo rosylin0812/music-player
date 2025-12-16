@@ -1581,16 +1581,31 @@
                 
                 console.log('Found', songElements.length, 'song items');
                 
-                songElements.forEach((element, idx) => {
-                    const rect = element.getBoundingClientRect();
-                    const itemMiddle = rect.top + rect.height / 2;
-                    
-                    // If finger is over this item's middle point
-                    if (fingerY >= rect.top && fingerY <= rect.bottom) {
-                        targetIndex = idx;
-                        console.log('Finger over item', idx, 'at Y:', fingerY);
-                    }
-                });
+                // Check if finger is above the first item or below the last item
+                const firstItem = songElements[0];
+                const lastItem = songElements[songElements.length - 1];
+                
+                if (firstItem && fingerY < firstItem.getBoundingClientRect().top) {
+                    // Finger is above the first item
+                    targetIndex = 0;
+                    console.log('Finger ABOVE first item, targeting index 0');
+                } else if (lastItem && fingerY > lastItem.getBoundingClientRect().bottom) {
+                    // Finger is below the last item
+                    targetIndex = songElements.length - 1;
+                    console.log('Finger BELOW last item, targeting index', targetIndex);
+                } else {
+                    // Finger is somewhere in the middle, find which item
+                    songElements.forEach((element, idx) => {
+                        const rect = element.getBoundingClientRect();
+                        const itemMiddle = rect.top + rect.height / 2;
+                        
+                        // If finger is over this item
+                        if (fingerY >= rect.top && fingerY <= rect.bottom) {
+                            targetIndex = idx;
+                            console.log('Finger over item', idx, 'at Y:', fingerY);
+                        }
+                    });
+                }
                 
                 console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
                 console.log('Are they different?', targetIndex !== touchDragIndex);
