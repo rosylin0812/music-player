@@ -1526,6 +1526,12 @@
                 // Store reference to the touched element
                 const touchedElement = e.currentTarget.parentElement;
                 
+                // Store the natural Y position BEFORE any transforms (to prevent vibration)
+                const naturalRect = touchedElement.getBoundingClientRect();
+                touchedElement.dataset.naturalY = naturalRect.top;
+                touchedElement.dataset.itemHeight = naturalRect.height;
+                console.log('Stored natural Y:', naturalRect.top, 'height:', naturalRect.height);
+                
                 // Long-press timer: wait 300ms before enabling drag
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
@@ -1560,19 +1566,19 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // Make the dragged item follow the finger
+                // Make the dragged item follow the finger using STORED natural position
                 const songElements = document.querySelectorAll('.song-item');
                 const draggedElement = songElements[touchDragIndex];
-                if (draggedElement) {
-                    // Get the natural position of this item in the list
-                    const rect = draggedElement.getBoundingClientRect();
-                    const naturalTop = rect.top;
+                if (draggedElement && draggedElement.dataset.naturalY) {
+                    // Use the stored natural Y position (doesn't change as item moves)
+                    const storedNaturalY = parseFloat(draggedElement.dataset.naturalY);
+                    const itemHeight = parseFloat(draggedElement.dataset.itemHeight);
                     
-                    // Calculate offset to make item appear at finger position
-                    const offset = fingerY - naturalTop - (rect.height / 2); // Center item on finger
+                    // Calculate offset to center item on finger
+                    const offset = fingerY - storedNaturalY - (itemHeight / 2);
                     
                     draggedElement.style.transform = `translateY(${offset}px)`;
-                    console.log('Item natural top:', naturalTop, 'Finger Y:', fingerY, 'Offset:', offset);
+                    console.log('Using stored naturalY:', storedNaturalY, 'Finger Y:', fingerY, 'Offset:', offset);
                 }
                 
                 // Find which song item the finger is currently over
@@ -1626,6 +1632,10 @@
                     el.style.transform = '';
                     el.style.boxShadow = '';
                     el.style.zIndex = '';
+                    
+                    // Clean up stored data
+                    delete el.dataset.naturalY;
+                    delete el.dataset.itemHeight;
                     
                     // Remove transition after animation completes
                     setTimeout(() => {
