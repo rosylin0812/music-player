@@ -1498,11 +1498,13 @@
             
             const handleSongTouchStart = (e, index) => {
                 e.preventDefault(); // Prevent text selection
+                console.log('Touch start on song index:', index);
                 const touch = e.touches[0];
                 setTouchDragY(touch.clientY);
                 
                 // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
                 dragHandleTimer.current = setTimeout(() => {
+                    console.log('Long press activated! Starting drag for index:', index);
                     setTouchDragIndex(index);
                     setDraggedSong(index);
                     setIsDraggingTouch(true);
@@ -1511,13 +1513,14 @@
             
             const handleSongTouchMove = (e, index) => {
                 if (!isDraggingTouch || touchDragIndex === null) {
-                    // Cancel long-press if user moves before 500ms
+                    // Cancel long-press if user moves before 300ms
                     if (dragHandleTimer.current) {
                         clearTimeout(dragHandleTimer.current);
                     }
                     return;
                 }
                 
+                console.log('Touch move - isDragging:', isDraggingTouch, 'touchDragIndex:', touchDragIndex);
                 e.preventDefault();
                 
                 const touch = e.touches[0];
@@ -1537,8 +1540,11 @@
                     }
                 });
                 
+                console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
+                
                 // If finger moved to a different position, reorder
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
+                    console.log('Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
                     setTouchDragIndex(targetIndex);
                 }
