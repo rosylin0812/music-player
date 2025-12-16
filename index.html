@@ -1522,22 +1522,15 @@
             const handleSongTouchStart = (e, index) => {
                 e.preventDefault(); // Prevent text selection
                 console.log('Touch start on song index:', index);
-                const touch = e.touches[0];
-                setTouchDragY(touch.clientY);
                 
                 // Store reference to the touched element
                 const touchedElement = e.currentTarget.parentElement;
                 
-                // Store initial position of the element
-                const initialRect = touchedElement.getBoundingClientRect();
-                touchedElement.dataset.initialTop = initialRect.top;
-                touchedElement.dataset.initialY = touch.clientY;
-                
-                // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
+                // Long-press timer: wait 300ms before enabling drag
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Add visual feedback immediately via DOM - FLOATING EFFECT (no rotation, original size)
+                    // Add visual feedback immediately via DOM - FLOATING EFFECT
                     touchedElement.style.opacity = '1.0'; // Fully visible
                     touchedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)'; // Big shadow for floating
                     touchedElement.style.zIndex = '1000';
@@ -1567,45 +1560,42 @@
                 const touch = e.touches[0];
                 const fingerY = touch.clientY;
                 
-                // Make the dragged item follow the finger (original size, just moves up/down)
+                // Make the dragged item follow the finger
                 const songElements = document.querySelectorAll('.song-item');
                 const draggedElement = songElements[touchDragIndex];
                 if (draggedElement) {
-                    const initialY = parseFloat(draggedElement.dataset.initialY);
-                    const deltaY = fingerY - initialY;
-                    draggedElement.style.transform = `translateY(${deltaY}px)`; // Just move, no scale/rotate
+                    // Get the natural position of this item in the list
+                    const rect = draggedElement.getBoundingClientRect();
+                    const naturalTop = rect.top;
+                    
+                    // Calculate offset to make item appear at finger position
+                    const offset = fingerY - naturalTop - (rect.height / 2); // Center item on finger
+                    
+                    draggedElement.style.transform = `translateY(${offset}px)`;
+                    console.log('Item natural top:', naturalTop, 'Finger Y:', fingerY, 'Offset:', offset);
                 }
                 
                 // Find which song item the finger is currently over
+                // Use CLOSEST CENTER approach - more reliable after reorders
                 let targetIndex = touchDragIndex; // Default to current position
                 
                 console.log('Found', songElements.length, 'song items');
                 
-                // Check if finger is above the first item or below the last item
-                const firstItem = songElements[0];
-                const lastItem = songElements[songElements.length - 1];
+                // Find the item whose center is closest to the finger
+                let closestDistance = Infinity;
                 
-                if (firstItem && fingerY < firstItem.getBoundingClientRect().top) {
-                    // Finger is above the first item
-                    targetIndex = 0;
-                    console.log('Finger ABOVE first item, targeting index 0');
-                } else if (lastItem && fingerY > lastItem.getBoundingClientRect().bottom) {
-                    // Finger is below the last item
-                    targetIndex = songElements.length - 1;
-                    console.log('Finger BELOW last item, targeting index', targetIndex);
-                } else {
-                    // Finger is somewhere in the middle, find which item
-                    songElements.forEach((element, idx) => {
-                        const rect = element.getBoundingClientRect();
-                        const itemMiddle = rect.top + rect.height / 2;
-                        
-                        // If finger is over this item
-                        if (fingerY >= rect.top && fingerY <= rect.bottom) {
-                            targetIndex = idx;
-                            console.log('Finger over item', idx, 'at Y:', fingerY);
-                        }
-                    });
-                }
+                songElements.forEach((element, idx) => {
+                    const rect = element.getBoundingClientRect();
+                    const itemCenter = rect.top + rect.height / 2;
+                    const distance = Math.abs(fingerY - itemCenter);
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        targetIndex = idx;
+                    }
+                });
+                
+                console.log('Closest item to finger is index:', targetIndex, 'at distance:', closestDistance);
                 
                 console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
                 console.log('Are they different?', targetIndex !== touchDragIndex);
@@ -1617,24 +1607,6 @@
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
                     console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
-                    
-                    // FIX: Reset the reference point after reordering to keep item under finger
-                    setTimeout(() => {
-                        const newSongElements = document.querySelectorAll('.song-item');
-                        const newDraggedElement = newSongElements[targetIndex];
-                        if (newDraggedElement) {
-                            // Update the initial Y to current finger position
-                            newDraggedElement.dataset.initialY = fingerY;
-                            // Reset transform to 0 since we're starting from new position
-                            newDraggedElement.style.transform = 'translateY(0px)';
-                            // Keep the floating effect
-                            newDraggedElement.style.opacity = '1.0';
-                            newDraggedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
-                            newDraggedElement.style.zIndex = '1000';
-                            console.log('Reset reference point to fingerY:', fingerY);
-                        }
-                    }, 0);
-                    
                     setTouchDragIndex(targetIndex);
                 } else {
                     console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
@@ -1659,9 +1631,6 @@
                     setTimeout(() => {
                         el.style.transition = '';
                     }, 300);
-                    
-                    delete el.dataset.initialTop;
-                    delete el.dataset.initialY;
                 });
                 
                 setTouchDragY(null);
