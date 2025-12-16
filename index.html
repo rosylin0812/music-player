@@ -1537,10 +1537,10 @@
                 dragHandleTimer.current = setTimeout(() => {
                     console.log('Long press activated! Starting drag for index:', index);
                     
-                    // Add visual feedback immediately via DOM - MORE VISIBLE
-                    touchedElement.style.opacity = '0.5';
-                    touchedElement.style.transform = 'scale(1.15)';
-                    touchedElement.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.4)';
+                    // Add visual feedback immediately via DOM - FLOATING EFFECT
+                    touchedElement.style.opacity = '1.0'; // Fully visible, not ghostly!
+                    touchedElement.style.transform = 'scale(1.15) rotate(2deg)'; // Slight rotation for dynamic feel
+                    touchedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)'; // Bigger shadow
                     touchedElement.style.zIndex = '1000';
                     touchedElement.style.transition = 'none'; // Remove transition for instant follow
                     
@@ -1574,7 +1574,7 @@
                 if (draggedElement) {
                     const initialY = parseFloat(draggedElement.dataset.initialY);
                     const deltaY = fingerY - initialY;
-                    draggedElement.style.transform = `scale(1.15) translateY(${deltaY}px)`;
+                    draggedElement.style.transform = `scale(1.15) rotate(2deg) translateY(${deltaY}px)`;
                 }
                 
                 // Find which song item the finger is currently over
@@ -1614,13 +1614,20 @@
                     clearTimeout(dragHandleTimer.current);
                 }
                 
-                // Remove visual feedback from all items and reset positions
+                // Add smooth spring animation when releasing
                 document.querySelectorAll('.song-item').forEach(el => {
+                    // Add spring animation for smooth snap back
+                    el.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; // Spring effect
                     el.style.opacity = '';
                     el.style.transform = '';
                     el.style.boxShadow = '';
                     el.style.zIndex = '';
-                    el.style.transition = '';
+                    
+                    // Remove transition after animation completes
+                    setTimeout(() => {
+                        el.style.transition = '';
+                    }, 300);
+                    
                     delete el.dataset.initialTop;
                     delete el.dataset.initialY;
                 });
