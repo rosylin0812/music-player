@@ -1613,6 +1613,33 @@
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
                     console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
+                    
+                    // Update naturalY after reorder to keep reference accurate
+                    setTimeout(() => {
+                        const newSongElements = document.querySelectorAll('.song-item');
+                        const newDraggedElement = newSongElements[targetIndex];
+                        if (newDraggedElement) {
+                            // Store the NEW natural position after reorder
+                            const newRect = newDraggedElement.getBoundingClientRect();
+                            // Calculate where it SHOULD be without the current transform
+                            const currentTransform = newDraggedElement.style.transform;
+                            const match = currentTransform.match(/translateY\(([-\d.]+)px\)/);
+                            const currentOffset = match ? parseFloat(match[1]) : 0;
+                            
+                            // New natural Y = current position - current offset
+                            const newNaturalY = newRect.top - currentOffset;
+                            newDraggedElement.dataset.naturalY = newNaturalY;
+                            
+                            console.log('Updated naturalY to:', newNaturalY, 'after reorder to index', targetIndex);
+                            
+                            // Keep floating effect
+                            newDraggedElement.style.opacity = '1.0';
+                            newDraggedElement.style.boxShadow = '0 20px 50px rgba(0, 0, 0, 0.5)';
+                            newDraggedElement.style.zIndex = '1000';
+                            newDraggedElement.style.transition = 'none';
+                        }
+                    }, 0);
+                    
                     setTouchDragIndex(targetIndex);
                 } else {
                     console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
