@@ -163,7 +163,7 @@
         .bg-light .btn-secondary {
             background: rgba(0, 0, 0, 0.08);
             border: 1px solid rgba(0, 0, 0, 0.15);
-            color: #000000;
+            color: #000000 !important;
         }
         .bg-light .btn-secondary:hover {
             background: rgba(0, 0, 0, 0.12);
@@ -307,6 +307,12 @@
             color: rgba(255, 255, 255, 0.4);
             font-size: 18px;
             cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;
+            -webkit-touch-callout: none;
         }
         .drag-handle:active {
             cursor: grabbing;
@@ -550,8 +556,8 @@
             .main { padding-bottom: 200px; }
             
             .btn-primary, .btn-secondary {
-                padding: 12px 20px;
-                font-size: 14px;
+                padding: 10px 18px;
+                font-size: 13px;
             }
             
             .icon-btn {
@@ -1475,6 +1481,7 @@
             const [isDraggingTouch, setIsDraggingTouch] = useState(false);
             
             const handleSongTouchStart = (e, index) => {
+                e.preventDefault(); // Prevent text selection
                 const touch = e.touches[0];
                 setTouchDragY(touch.clientY);
                 
@@ -1753,11 +1760,11 @@
                                 },
                                     React.createElement('div', { 
                                         className: 'font-bold truncate', 
-                                        style: { color: activePlaylist === p.id ? PRIMARY : '#ffffff' }
+                                        style: { color: activePlaylist === p.id && view === 'playlist' ? PRIMARY : (darkMode ? '#ffffff' : '#000000') }
                                     }, p.name),
                                     React.createElement('div', { 
-                                        className: `text-sm`,
-                                        style: { color: '#b3b3b3' }
+                                        className: 'text-sm',
+                                        style: { color: darkMode ? '#b3b3b3' : '#666666' }
                                     }, `${p.songs.length} tracks`)
                                 ),
                                 React.createElement('button', {
