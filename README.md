@@ -1,8 +1,8 @@
-### Music Player for Fan Bai (Dharma instrument) Practice
+### Music Player for Fan Bai (Buddhist Chanting) Practice
 
 Link : https://fanbaipractice.vercel.app/
 
-This modern web app is a dedicated music player for Fan Bai practice.
+This modern web app is a dedicated music player for Fan Bai/ Buddhist Chanting practice.
 
 It lets you organize songs and playlists exactly how you want with simple drag-and-drop, works fully offline, and saves everything permanently on your device. 
 
