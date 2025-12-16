@@ -866,7 +866,7 @@
         function MusicPlayer() {
             const [playlists, setPlaylists] = useState([]);
             const [activePlaylist, setActivePlaylist] = useState(null);
-            const [view, setView] = useState('home'); // NEW: 'home' or 'playlist'
+            const [view, setView] = useState('home');
             const [currentSong, setCurrentSong] = useState(null);
             const [isPlaying, setIsPlaying] = useState(false);
             const [repeat, setRepeat] = useState(false);
@@ -1059,7 +1059,6 @@
                 setShowModal('create');
             };
 
-            // Navigation functions
             const goToHome = () => {
                 setView('home');
                 setSidebarOpen(false);
@@ -1077,11 +1076,10 @@
                     const id = Date.now();
                     const newPlaylist = { id, name: modalInput.trim(), songs: [] };
                     
-                    // Save immediately
                     await DB.save('playlists', newPlaylist);
                     
                     setPlaylists([...playlists, newPlaylist]);
-                    openPlaylist(id); // Use new navigation function
+                    openPlaylist(id);
                     setShowModal(null);
                     
                     debugLog('Playlist created and saved');
@@ -1653,7 +1651,7 @@
                                 onDragStart: (e) => handlePlaylistDragStart(e, index),
                                 onDragOver: (e) => handlePlaylistDragOver(e, index),
                                 onDragEnd: handlePlaylistDragEnd,
-                                className: `playlist-item ${card} ${activePlaylist === p.id && view === 'playlist' ? 'active' : ''} ${draggedPlaylist === index ? 'dragging' : ''}`,
+                                className: `playlist-item ${card} ${activePlaylist === p.id ? 'active' : ''} ${draggedPlaylist === index ? 'dragging' : ''}`,
                                 style: { position: 'relative' }
                             },
                                 React.createElement('div', { className: 'drag-handle' }, React.createElement(Icons.GripVertical)),
@@ -1662,11 +1660,12 @@
                                     onClick: () => openPlaylist(p.id)
                                 },
                                     React.createElement('div', { 
-                                        className: 'font-bold truncate text-color', 
-                                        style: activePlaylist === p.id && view === 'playlist' ? { color: PRIMARY } : {}
+                                        className: 'font-bold truncate', 
+                                        style: { color: activePlaylist === p.id ? PRIMARY : '#ffffff' }
                                     }, p.name),
                                     React.createElement('div', { 
-                                        className: 'text-sm text-muted'
+                                        className: `text-sm`,
+                                        style: { color: '#b3b3b3' }
                                     }, `${p.songs.length} tracks`)
                                 ),
                                 React.createElement('button', {
@@ -1693,19 +1692,23 @@
                                 className: 'icon-btn icon-btn-small'
                             }, React.createElement(Icons.Menu)),
                             React.createElement('div', { 
-                                className: 'font-bold text-xl truncate text-color'
-                            }, view === 'home' ? 'Music Player' : (current?.name || 'Playlist'))
+                                className: 'font-bold text-xl truncate',
+                                className: 'text-color'
+                            }, current?.name || 'Music Player')
                         ),
                         
-                        // HOME VIEW: Grid only
-                        view === 'home' && React.createElement('div', { className: 'p-8' },
-                            React.createElement('div', { 
-                                className: 'text-3xl font-bold mb-6 text-color'
-                            }, 'Your Playlists'),
-                            React.createElement('div', { className: 'playlist-grid' },
-                                playlists.map(p => React.createElement('div', {
-                                    key: p.id,
-                                    onClick: () => openPlaylist(p.id),
+                        // Main content with grid + recent playlist
+                        React.createElement('div', { className: 'p-8' },
+                            // Playlist Grid
+                            React.createElement('div', { className: 'mb-8' },
+                                React.createElement('div', { 
+                                    className: 'text-2xl font-bold mb-4',
+                                    className: 'text-color'
+                                }, 'Your Playlists'),
+                                React.createElement('div', { className: 'playlist-grid' },
+                                    playlists.map(p => React.createElement('div', {
+                                        key: p.id,
+                                        onClick: () => setActivePlaylist(p.id),
                                         className: `playlist-grid-card ${card}`,
                                         style: { 
                                             ...(activePlaylist === p.id ? { 
@@ -1741,18 +1744,11 @@
                                         }, `${p.songs.length} tracks`)
                                     ))
                                 )
-                            )
-                        ),
-                        
-                        // PLAYLIST VIEW: Back button + songs
-                        view === 'playlist' && current && React.createElement('div', { className: 'p-8' },
-                            React.createElement('div', { className: 'flex items-center justify-between mb-6' },
-                                React.createElement('div', { className: 'flex items-center gap-4', style: { flex: 1 } },
-                                    React.createElement('button', {
-                                        onClick: goToHome,
-                                        className: 'icon-btn',
-                                        title: 'Back to Home'
-                                    }, React.createElement(Icons.ArrowLeft)),
+                            ),
+                            
+                            // Current/Recent Playlist View
+                            current && React.createElement('div', null,
+                                React.createElement('div', { className: 'flex items-center justify-between mb-6' },
                                     React.createElement('div', { style: { flex: 1 } },
                                         editingPlaylist === current.id ?
                                             React.createElement('input', {
