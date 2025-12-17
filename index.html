@@ -173,13 +173,13 @@
             stroke: #000000;
         }
         .bg-light .btn-secondary {
-            background: rgba(0, 0, 0, 0.08);
-            border: 2px solid rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.05);
+            border: 2px solid rgba(0, 0, 0, 0.4);
             color: #000000 !important;
         }
         .bg-light .btn-secondary:hover {
-            background: rgba(0, 0, 0, 0.12);
-            border: 2px solid rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(0, 0, 0, 0.5);
         }
         
         /* Layout */
@@ -1720,24 +1720,45 @@
                         }
                     },
                     onEnded: () => {
+                        console.log('🎵 Song ended. Repeat state:', repeat);
+                        console.log('audioRef.current exists?', !!audioRef.current);
+                        
                         if (repeat) {
+                            console.log('✅ Repeat is enabled, attempting to replay...');
+                            
                             // Mobile-friendly repeat: handle play promise
                             if (audioRef.current) {
+                                console.log('Setting currentTime to 0');
                                 audioRef.current.currentTime = 0;
+                                
+                                console.log('Calling play()...');
                                 const playPromise = audioRef.current.play();
+                                
+                                console.log('Play promise:', playPromise);
+                                
                                 if (playPromise !== undefined) {
-                                    playPromise.catch(err => {
-                                        console.log('Repeat play error (mobile):', err);
-                                        // Try again after a brief delay for mobile
-                                        setTimeout(() => {
-                                            if (audioRef.current) {
-                                                audioRef.current.play().catch(e => console.log('Retry failed:', e));
-                                            }
-                                        }, 100);
-                                    });
+                                    playPromise
+                                        .then(() => {
+                                            console.log('✅ Play succeeded!');
+                                        })
+                                        .catch(err => {
+                                            console.log('❌ Repeat play error (mobile):', err);
+                                            // Try again after a brief delay for mobile
+                                            setTimeout(() => {
+                                                console.log('Retrying play after delay...');
+                                                if (audioRef.current) {
+                                                    audioRef.current.play()
+                                                        .then(() => console.log('✅ Retry succeeded!'))
+                                                        .catch(e => console.log('❌ Retry failed:', e));
+                                                }
+                                            }, 100);
+                                        });
                                 }
+                            } else {
+                                console.log('❌ audioRef.current is null!');
                             }
                         } else {
+                            console.log('Repeat is OFF, calling playNext()');
                             playNext();
                         }
                     }
