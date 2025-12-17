@@ -1591,11 +1591,11 @@
                 
                 // If finger moved to a different position, reorder
                 if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
-                    console.log('✅ ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
+                    console.log('âœ… ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
                     handleSongDragOver(e, targetIndex);
                     setTouchDragIndex(targetIndex);
                 } else {
-                    console.log('❌ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
+                    console.log('âŒ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
                 }
             };
             
@@ -1707,11 +1707,11 @@
                         }
                     },
                     onEnded: () => {
-                        console.log('🎵 Song ended. Repeat state:', repeat);
+                        console.log('ðŸŽµ Song ended. Repeat state:', repeat);
                         console.log('audioRef.current exists?', !!audioRef.current);
                         
                         if (repeat) {
-                            console.log('✅ Repeat is enabled, attempting to replay...');
+                            console.log('âœ… Repeat is enabled, attempting to replay...');
                             
                             // Mobile-friendly repeat: handle play promise
                             if (audioRef.current) {
@@ -1726,23 +1726,23 @@
                                 if (playPromise !== undefined) {
                                     playPromise
                                         .then(() => {
-                                            console.log('✅ Play succeeded!');
+                                            console.log('âœ… Play succeeded!');
                                         })
                                         .catch(err => {
-                                            console.log('❌ Repeat play error (mobile):', err);
+                                            console.log('âŒ Repeat play error (mobile):', err);
                                             // Try again after a brief delay for mobile
                                             setTimeout(() => {
                                                 console.log('Retrying play after delay...');
                                                 if (audioRef.current) {
                                                     audioRef.current.play()
-                                                        .then(() => console.log('✅ Retry succeeded!'))
-                                                        .catch(e => console.log('❌ Retry failed:', e));
+                                                        .then(() => console.log('âœ… Retry succeeded!'))
+                                                        .catch(e => console.log('âŒ Retry failed:', e));
                                                 }
                                             }, 100);
                                         });
                                 }
                             } else {
-                                console.log('❌ audioRef.current is null!');
+                                console.log('âŒ audioRef.current is null!');
                             }
                         } else {
                             console.log('Repeat is OFF, calling playNext()');
@@ -2000,7 +2000,7 @@
                                                             e.stopPropagation();
                                                             startEditingPlaylist(current);
                                                         },
-                                                        className: 'icon-btn icon-btn-small hide-mobile',
+                                                        className: 'icon-btn icon-btn-small',
                                                         title: 'Edit playlist name'
                                                     }, React.createElement(Icons.Edit))
                                                 ),
@@ -2034,7 +2034,7 @@
                                         style: { display: 'flex', alignItems: 'center', gap: '8px' }
                                     }, 
                                         React.createElement(Icons.Upload),
-                                        'Upload Files'
+                                        'Add Songs'
                                     ),
                                     React.createElement('button', { 
                                         onClick: () => { 
