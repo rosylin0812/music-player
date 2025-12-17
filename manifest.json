@@ -2,7 +2,7 @@
   "name": "Music Player",
   "short_name": "Music",
   "description": "Personal music player with playlist management",
-  "start_url": "./music-player-v5.html",
+  "start_url": "https://fanbaipractice.vercel.app/",
   "display": "standalone",
   "background_color": "#2E8B57",
   "theme_color": "#2E8B57",
