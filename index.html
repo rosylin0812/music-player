@@ -1687,24 +1687,6 @@
             }
 
             return React.createElement('div', null,
-                // Debug Toggle Button
-                React.createElement('button', {
-                    className: 'debug-toggle icon-btn',
-                    onClick: () => setShowDebug(!showDebug),
-                    title: 'Toggle Debug Info'
-                }, React.createElement(Icons.Bug)),
-                
-                // Debug Panel
-                showDebug && React.createElement('div', { className: 'debug-panel' },
-                    React.createElement('div', { style: { fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' } }, 'Debug Info'),
-                    React.createElement('div', {}, `Playlists: ${debugInfo.playlistCount}`),
-                    React.createElement('div', {}, `Active: ${debugInfo.activePlaylist}`),
-                    React.createElement('div', {}, `Loading: ${debugInfo.loading}`),
-                    React.createElement('div', {}, `Online: ${debugInfo.isOnline}`),
-                    React.createElement('div', {}, `Playing: ${debugInfo.currentSong}`),
-                    React.createElement('div', { style: { marginTop: '8px', fontSize: '10px', opacity: 0.7 } }, `Updated: ${debugInfo.lastUpdate}`)
-                ),
-                
                 // Offline banner
                 !isOnline && React.createElement('div', { className: 'offline-banner' },
                     'Offline Mode - Only local songs available'
