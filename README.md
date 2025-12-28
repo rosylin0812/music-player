@@ -1,6 +1,6 @@
 ### Music Player for Fan Bai (Buddhist Chanting) Practice
 
-Link : [https://fanbaipractice.vercel.app/](https://fan-bai-player.vercel.app/)
+Link : https://fan-bai-player.vercel.app/
 
 This modern web app is a dedicated music player for Fan Bai/ Buddhist Chanting practice.
 
