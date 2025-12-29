@@ -2,496 +2,2458 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2E8B57">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Player">
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon-final.svg">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <title>Music Player v14 - Safari Fix</title>
-
-<!-- VConsole Mobile DevTools -->
-<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-<script>
-    var vConsole = new window.VConsole();
-    console.log('🔧 VConsole loaded! Look for green button in bottom-right.');
-</script>
-
-<style>
-    * { 
-        margin: 0; 
-        padding: 0; 
-        box-sizing: border-box; 
-    }
+    <title>Music Player</title>
     
-    html, body { 
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        overflow: hidden;
-        -webkit-font-smoothing: antialiased;
-        touch-action: manipulation;
-        -webkit-text-size-adjust: 100%;
-        width: 100%;
-        height: 100%;
-        position: fixed;
-        margin: 0;
-        padding: 0;
-        background: #000000;
-    }
-    
-    #root {
-        width: 100%;
-        height: 100%;
-        background: #000000;
-    }
-    
-    .bg-dark { 
-        background: #000000; 
-        color: #ffffff;
-    }
-    
-    .loading-overlay {
-        position: fixed;
-        inset: 0;
-        background: #000000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 2000;
-        color: #ffffff;
-    }
-    
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top-color: #1DB954;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    
-    /* Simple button styles for testing */
-    .btn-primary {
-        background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
-        color: white;
-        border: none;
-        padding: 16px 32px;
-        border-radius: 12px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        margin: 10px;
-    }
-    
-    .debug-panel {
-        background: rgba(30, 30, 40, 0.98);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 12px;
-        padding: 20px;
-        margin: 20px;
-        color: #ffffff;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        max-width: 500px;
-    }
-    
-    .debug-item {
-        margin: 8px 0;
-        padding: 4px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-</style>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-<!-- React -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
-<!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Backgrounds - PURE BLACK for dark mode */
+        .bg-dark { 
+            background: #000000; 
+            color: #ffffff;
+        }
+        .bg-dark * {
+            color: #ffffff;
+        }
+        .bg-light { 
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #d4d4d4 100%); 
+            color: #000000;
+        }
+        .bg-light * {
+            color: #000000;
+        }
+        .sidebar-dark { 
+            background: #000000; 
+            border-right: 1px solid rgba(255, 255, 255, 0.15); 
+        }
+        .sidebar-light { 
+            background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%); 
+            border-right: 1px solid rgba(0, 0, 0, 0.05); 
+        }
+        
+        /* Cards - Higher contrast for dark mode */
+        .card-dark { 
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+        }
+        .card-light { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Playlist Grid Cards */
+        .playlist-grid-card {
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 140px;
+            position: relative;
+        }
+        .playlist-grid-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .playlist-grid-card .grid-menu-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .playlist-grid-card:hover .grid-menu-btn {
+            opacity: 1;
+        }
+        
+        /* Buttons - Brighter for dark mode */
+        .btn-primary {
+            background: linear-gradient(135deg, #1DB954 0%, #1ed760 100%);
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 15px;
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.5); 
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s;
+            color: #ffffff;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 15px;
+        }
+        .btn-secondary:hover { 
+            background: rgba(255, 255, 255, 0.22); 
+            transform: translateY(-1px); 
+        }
+        
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            color: #ffffff;
+        }
+        .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: scale(1.1);
+        }
+        .icon-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .icon-btn-small {
+            width: 32px;
+            height: 32px;
+        }
+        
+        /* Light mode icon colors - BLACK icons in light mode */
+        .bg-light .icon-btn {
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            color: #000000;
+        }
+        .bg-light .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .bg-light .icon-btn svg {
+            color: #000000;
+            stroke: #000000;
+        }
+        .bg-light .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #000000 !important;
+        }
+        .bg-light .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Buttons and labels inside light mode modals */
+        .modal-light .btn-secondary {
+            border: 1px solid rgba(0, 0, 0, 0.2) !important;
+            color: #000000 !important;
+        }
+        .modal-light label.btn-secondary {
+            border: 1px solid rgba(0, 0, 0, 0.2) !important;
+            color: #000000 !important;
+        }
+        
+        /* Layout */
+        .container { 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        .sidebar { 
+            width: 260px; 
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            overflow-y: auto; 
+        }
+        .main { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-bottom: 140px; 
+        }
+        
+        /* Text - Pure white for dark mode */
+        .bg-dark .text-muted-dark { color: #b3b3b3; }
+        .bg-light .text-muted-light { color: #6b7280; }
+        
+        .bg-dark input,
+        .bg-dark button,
+        .bg-dark .icon-btn,
+        .bg-dark svg {
+            color: #ffffff;
+        }
+        
+        .bg-light input,
+        .bg-light button,
+        .bg-light .icon-btn,
+        .bg-light svg {
+            color: #000000;
+        }
+        
+        /* Utilities */
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .p-3 { padding: 12px; }
+        .p-4 { padding: 16px; }
+        .p-6 { padding: 24px; }
+        .p-8 { padding: 32px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mb-6 { margin-bottom: 24px; }
+        .rounded-lg { border-radius: 12px; }
+        .rounded-xl { border-radius: 16px; }
+        .rounded-full { border-radius: 9999px; }
+        .font-bold { font-weight: 700; }
+        .text-xl { font-size: 20px; line-height: 1.4; }
+        .text-2xl { font-size: 24px; line-height: 1.3; }
+        .text-3xl { font-size: 30px; line-height: 1.2; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .truncate { 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            white-space: nowrap; 
+        }
+        .cursor-pointer { cursor: pointer; }
+        .transition { transition: all 0.2s; }
+        
+        /* Input */
+        input[type="text"], 
+        input[type="search"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .bg-dark input[type="text"],
+        .bg-dark input[type="search"] {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .bg-dark input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .bg-light input[type="text"],
+        .bg-light input[type="search"] {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(255,255,255,0.3); 
+            border-radius: 4px; 
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: rgba(255,255,255,0.4); 
+        }
+        
+        /* Playlist item with drag handle */
+        .playlist-item { 
+            padding: 14px; 
+            border-radius: 12px; 
+            cursor: grab;
+            transition: all 0.2s; 
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .playlist-item:active {
+            cursor: grabbing;
+        }
+        .playlist-item:hover { 
+            transform: translateX(4px); 
+        }
+        .playlist-item.active { 
+            border-left: 4px solid #1DB954; 
+            padding-left: 10px;
+        }
+        .playlist-item.dragging {
+            opacity: 0.5;
+        }
+        
+        .drag-handle {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 18px;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            touch-action: none;
+            -webkit-touch-callout: none;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
+        /* Light mode drag handles */
+        .bg-light .drag-handle {
+            color: rgba(0, 0, 0, 0.3);
+        }
+        .bg-light .drag-handle:hover {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Song item with drag */
+        .song-item { 
+            padding: 16px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            color: #ffffff;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .song-item:hover { 
+            transform: scale(1.01); 
+        }
+        .song-item.active { 
+            background: rgba(29, 185, 84, 0.15) !important; 
+        }
+        .song-item.dragging {
+            opacity: 0.5;
+        }
+        
+        /* Modal */
+        .modal-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            backdrop-filter: blur(8px); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal { 
+            padding: 28px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 420px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-dark {
+            background: rgba(30, 30, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        
+        .modal-light {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1a1a1a;
+        }
+        
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: rgba(40, 40, 50, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 100;
+            min-width: 160px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+        
+        .context-menu-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+        }
+        
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Player - IMPROVED */
+        .player { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            padding: 12px 20px; 
+            z-index: 50;
+            background: #2a2a2a !important;
+        }
+        
+        .bg-light .player {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Player bar buttons in light mode - keep BLACK */
+        .bg-light .player .icon-btn {
+            color: #000000 !important;
+        }
+        .bg-light .player .icon-btn svg {
+            color: #000000 !important;
+            stroke: #000000 !important;
+            fill: #000000 !important;
+        }
+        .bg-light .player button {
+            color: #000000 !important;
+        }
+        .bg-light .player button svg {
+            color: #000000 !important;
+            stroke: #000000 !important;
+            fill: #000000 !important;
+        }
+        
+        /* Player bar text (song name, time) - make WHITE in light mode */
+        .bg-light .player .player-info {
+            color: #ffffff !important;
+        }
+        .bg-light .player .player-info * {
+            color: #ffffff !important;
+        }
+        
+        /* Volume icon - make WHITE in light mode */
+        .bg-light .player .player-volume svg {
+            color: #ffffff !important;
+            stroke: #ffffff !important;
+            fill: #ffffff !important;
+        }
+        
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .player-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        
+        .progress-bar { 
+            height: 6px; 
+            background: rgba(255,255,255,0.25); 
+            border-radius: 3px; 
+            cursor: pointer; 
+            position: relative;
+            flex: 1;
+        }
+        
+        .progress-fill { 
+            height: 100%; 
+            background: #1DB954; 
+            border-radius: 3px; 
+            transition: width 0.1s linear;
+        }
+        
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            background: rgba(30, 30, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            color: #ffffff;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1001;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            z-index: 1002;
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            .sidebar { 
+                position: fixed; 
+                left: -100%; 
+                top: 0; 
+                bottom: 0; 
+                z-index: 60; 
+                width: 80%; 
+                max-width: 300px; 
+                transition: left 0.3s; 
+            }
+            .sidebar.open { left: 0; }
+            
+            .mobile-header { 
+                display: flex; 
+                position: relative;
+                padding: 16px 20px; 
+                align-items: center; 
+                gap: 16px; 
+                z-index: 10;
+                background: inherit;
+            }
+            
+            .overlay { 
+                display: none; 
+                position: fixed; 
+                inset: 0; 
+                background: rgba(0,0,0,0.6); 
+                z-index: 50; 
+            }
+            .overlay.open { display: block; }
+            
+            .main { padding-bottom: 200px; }
+            
+            .btn-primary, .btn-secondary {
+                padding: 10px 18px;
+                font-size: 13px;
+            }
+            
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .player {
+                padding: 10px 16px;
+            }
+            
+            .player-controls {
+                gap: 6px;
+            }
+            
+            .player-main {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .hide-mobile {
+                display: none !important;
+            }
+            
+            .debug-panel {
+                bottom: 200px;
+                right: 10px;
+                max-width: 250px;
+                font-size: 10px;
+            }
+            
+            .debug-toggle {
+                bottom: 200px;
+                right: 10px;
+            }
+            
+            .playlist-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 12px;
+            }
+            
+            .playlist-grid-card {
+                padding: 12px;
+                min-width: 100px;
+            }
+            
+            .playlist-grid-card > div:first-of-type {
+                font-size: 32px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            .playlist-grid-card .font-bold {
+                font-size: 13px !important;
+            }
+            
+            .playlist-grid-card .text-sm {
+                font-size: 11px !important;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-header { display: none; }
+        }
+        
+        /* Offline indicator */
+        .offline-banner {
+            background: rgba(255, 152, 0, 0.95);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        /* Grid layout */
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            color: #ffffff;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #1DB954;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <div id="root"></div>
 
-<script>
-    const { useState, useEffect, useRef } = React;
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    // ============================================
-    // FIREBASE CONFIGURATION
-    // ============================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyAA6AeCrTWe8_8sYTdnHffNuaPbbmUIftQ",
-      authDomain: "fan-bai-song-player.firebaseapp.com",
-      databaseURL: "https://fan-bai-song-player-default-rtdb.firebaseio.com",
-      projectId: "fan-bai-song-player",
-      storageBucket: "fan-bai-song-player.firebasestorage.app",
-      messagingSenderId: "929176647542",
-      appId: "1:929176647542:web:d0a385183a71ca358fec57"
-    };
+    <script>
+        const { useState, useEffect, useRef } = React;
+        const PRIMARY = '#1DB954';
 
-    // Initialize Firebase
-    let firebaseApp, firebaseDB, firebaseAuth;
-    let isFirebaseConfigured = false;
+        // Debug logging helper
+        const debugLog = (message, data) => {
+            console.log(`[MusicPlayer] ${message}`, data || '');
+        };
 
-    try {
-        firebaseApp = firebase.initializeApp(firebaseConfig);
-        firebaseDB = firebase.database();
-        firebaseAuth = firebase.auth();
-        
-        // Set persistence to LOCAL
-        firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-            .then(() => {
-                console.log('✅ Firebase auth persistence set to LOCAL');
-            })
-            .catch((error) => {
-                console.error('❌ Error setting Firebase persistence:', error);
+        // SVG Icons Component
+        const Icons = {
+            Sun: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('circle', { cx: '12', cy: '12', r: '5' }),
+                React.createElement('line', { x1: '12', y1: '1', x2: '12', y2: '3' }),
+                React.createElement('line', { x1: '12', y1: '21', x2: '12', y2: '23' }),
+                React.createElement('line', { x1: '4.22', y1: '4.22', x2: '5.64', y2: '5.64' }),
+                React.createElement('line', { x1: '18.36', y1: '18.36', x2: '19.78', y2: '19.78' }),
+                React.createElement('line', { x1: '1', y1: '12', x2: '3', y2: '12' }),
+                React.createElement('line', { x1: '21', y1: '12', x2: '23', y2: '12' }),
+                React.createElement('line', { x1: '4.22', y1: '19.78', x2: '5.64', y2: '18.36' }),
+                React.createElement('line', { x1: '18.36', y1: '5.64', x2: '19.78', y2: '4.22' })
+            ),
+            Moon: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('path', { d: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' })
+            ),
+            Menu: () => React.createElement('svg', { width: '24', height: '24', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('line', { x1: '3', y1: '6', x2: '21', y2: '6' }),
+                React.createElement('line', { x1: '3', y1: '12', x2: '21', y2: '12' }),
+                React.createElement('line', { x1: '3', y1: '18', x2: '21', y2: '18' })
+            ),
+            Home: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('path', { d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }),
+                React.createElement('polyline', { points: '9 22 9 12 15 12 15 22' })
+            ),
+            ArrowLeft: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('line', { x1: '19', y1: '12', x2: '5', y2: '12' }),
+                React.createElement('polyline', { points: '12 19 5 12 12 5' })
+            ),
+            Play: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('polygon', { points: '5 3 19 12 5 21 5 3' })
+            ),
+            Pause: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('rect', { x: '6', y: '4', width: '4', height: '16' }),
+                React.createElement('rect', { x: '14', y: '4', width: '4', height: '16' })
+            ),
+            SkipBack: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('polygon', { points: '19 20 9 12 19 4 19 20' }),
+                React.createElement('rect', { x: '5', y: '4', width: '2', height: '16' })
+            ),
+            SkipForward: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('polygon', { points: '5 4 15 12 5 20 5 4' }),
+                React.createElement('rect', { x: '17', y: '4', width: '2', height: '16' })
+            ),
+            Repeat: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('polyline', { points: '17 1 21 5 17 9' }),
+                React.createElement('path', { d: 'M3 11V9a4 4 0 0 1 4-4h14' }),
+                React.createElement('polyline', { points: '7 23 3 19 7 15' }),
+                React.createElement('path', { d: 'M21 13v2a4 4 0 0 1-4 4H3' })
+            ),
+            Volume: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('polygon', { points: '11 5 6 9 2 9 2 15 6 15 11 19 11 5' }),
+                React.createElement('path', { d: 'M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07' })
+            ),
+            Trash: () => React.createElement('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('polyline', { points: '3 6 5 6 21 6' }),
+                React.createElement('path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' })
+            ),
+            Upload: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
+                React.createElement('polyline', { points: '17 8 12 3 7 8' }),
+                React.createElement('line', { x1: '12', y1: '3', x2: '12', y2: '15' })
+            ),
+            Link: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('path', { d: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71' }),
+                React.createElement('path', { d: 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' })
+            ),
+            Music: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('path', { d: 'M9 18V5l12-2v13' }),
+                React.createElement('circle', { cx: '6', cy: '18', r: '3' }),
+                React.createElement('circle', { cx: '18', cy: '16', r: '3' })
+            ),
+            MoreVertical: () => React.createElement('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('circle', { cx: '12', cy: '5', r: '2' }),
+                React.createElement('circle', { cx: '12', cy: '12', r: '2' }),
+                React.createElement('circle', { cx: '12', cy: '19', r: '2' })
+            ),
+            Copy: () => React.createElement('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('rect', { x: '9', y: '9', width: '13', height: '13', rx: '2', ry: '2' }),
+                React.createElement('path', { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' })
+            ),
+            GripVertical: () => React.createElement('svg', { width: '16', height: '16', viewBox: '0 0 24 24', fill: 'currentColor' },
+                React.createElement('circle', { cx: '9', cy: '5', r: '1' }),
+                React.createElement('circle', { cx: '9', cy: '12', r: '1' }),
+                React.createElement('circle', { cx: '9', cy: '19', r: '1' }),
+                React.createElement('circle', { cx: '15', cy: '5', r: '1' }),
+                React.createElement('circle', { cx: '15', cy: '12', r: '1' }),
+                React.createElement('circle', { cx: '15', cy: '19', r: '1' })
+            ),
+            Edit: () => React.createElement('svg', { width: '18', height: '18', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('path', { d: 'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' }),
+                React.createElement('path', { d: 'M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' })
+            ),
+            Bug: () => React.createElement('svg', { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2' },
+                React.createElement('rect', { x: '8', y: '6', width: '8', height: '14', rx: '4' }),
+                React.createElement('path', { d: 'M8 6h8M12 2v4M8 10h8M8 14h8' })
+            )
+        };
+
+        // IndexedDB with better error handling
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                debugLog('Initializing IndexedDB...');
+                const req = indexedDB.open('MusicDB', 2);
+                
+                req.onerror = () => {
+                    debugLog('IndexedDB error:', req.error);
+                    reject(req.error);
+                };
+                
+                req.onsuccess = () => {
+                    debugLog('IndexedDB opened successfully');
+                    resolve(req.result);
+                };
+                
+                req.onupgradeneeded = (e) => {
+                    debugLog('IndexedDB upgrade needed');
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('playlists')) {
+                        db.createObjectStore('playlists', { keyPath: 'id' });
+                        debugLog('Created playlists store');
+                    }
+                    if (!db.objectStoreNames.contains('songs')) {
+                        db.createObjectStore('songs', { keyPath: 'id' });
+                        debugLog('Created songs store');
+                    }
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                        debugLog('Created settings store');
+                    }
+                };
             });
-        
-        isFirebaseConfigured = true;
-        console.log('✅ Firebase initialized successfully');
-    } catch (error) {
-        console.error('❌ Firebase initialization error:', error);
-        isFirebaseConfigured = false;
-    }
+        };
 
-    // ============================================
-    // SAFARI-COMPATIBLE FIREBASE AUTH
-    // ============================================
-    
-    /**
-     * SAFARI FIX: Use REDIRECT flow instead of POPUP
-     * Safari blocks popups aggressively, so we MUST use redirect
-     */
-    const signInWithGoogle = async () => {
-        if (!isFirebaseConfigured || !firebaseAuth) {
-            console.error('❌ Firebase not configured');
-            alert('Firebase not configured');
-            return null;
-        }
-        
-        try {
-            console.log('🔐 Starting Google sign-in for Safari...');
-            console.log('🌐 Browser:', navigator.userAgent);
-            
-            const provider = new firebase.auth.GoogleAuthProvider();
-            provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-            provider.addScope('https://www.googleapis.com/auth/userinfo.email');
-            
-            // SAFARI FIX: Always use redirect on mobile/Safari
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-            
-            if (isMobile || isSafari) {
-                console.log('📱 Mobile/Safari detected - using REDIRECT flow');
-                console.log('🔄 Redirecting to Google sign-in...');
-                
-                // Store a flag to know we initiated sign-in
-                localStorage.setItem('firebaseSignInInitiated', 'true');
-                
-                // Use redirect (this will reload the page)
-                await firebaseAuth.signInWithRedirect(provider);
-                
-                // Code after this won't run because page redirects
-                return null;
-            } else {
-                // Desktop Chrome/Firefox - try popup first
-                console.log('💻 Desktop detected - trying POPUP flow');
+        const DB = {
+            async save(store, data) {
                 try {
-                    const result = await firebaseAuth.signInWithPopup(provider);
-                    console.log('✅ Popup sign-in successful!');
-                    return result.user;
-                } catch (popupError) {
-                    console.warn('⚠️ Popup failed, falling back to redirect:', popupError.code);
-                    localStorage.setItem('firebaseSignInInitiated', 'true');
-                    await firebaseAuth.signInWithRedirect(provider);
+                    debugLog(`Saving to ${store}:`, data.id || data.key);
+                    const db = await initDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readwrite');
+                        const req = tx.objectStore(store).put(data);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Saved to ${store} successfully`);
+                            resolve(req.result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error saving to ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                        
+                        tx.oncomplete = () => {
+                            debugLog(`Transaction complete for ${store}`);
+                        };
+                    });
+                } catch (e) {
+                    debugLog('DB save error:', e);
+                    throw e;
+                }
+            },
+            
+            async get(store, key) {
+                try {
+                    debugLog(`Getting from ${store}:`, key);
+                    const db = await initDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readonly');
+                        const req = tx.objectStore(store).get(key);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Got from ${store}:`, req.result ? 'Found' : 'Not found');
+                            resolve(req.result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error getting from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
+                } catch (e) {
+                    debugLog('DB get error:', e);
                     return null;
                 }
-            }
-        } catch (error) {
-            console.error('❌ Sign-in error:', error);
-            console.error('Error code:', error.code);
-            console.error('Error message:', error.message);
-            alert(`Sign-in failed: ${error.message}`);
-            return null;
-        }
-    };
-
-    function TestApp() {
-        const [firebaseUser, setFirebaseUser] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [debugInfo, setDebugInfo] = useState({});
-        const [checkingRedirect, setCheckingRedirect] = useState(false);
-        
-        // Handle redirect result on page load
-        useEffect(() => {
-            if (!isFirebaseConfigured || !firebaseAuth) {
-                setLoading(false);
-                setDebugInfo(prev => ({
-                    ...prev,
-                    error: 'Firebase not configured'
-                }));
-                return;
-            }
+            },
             
-            const handleRedirectResult = async () => {
+            async getAll(store) {
                 try {
-                    console.log('🔍 Checking for redirect result...');
-                    setCheckingRedirect(true);
+                    debugLog(`Getting all from ${store}`);
+                    const db = await initDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readonly');
+                        const req = tx.objectStore(store).getAll();
+                        
+                        req.onsuccess = () => {
+                            const result = req.result || [];
+                            debugLog(`Got all from ${store}: ${result.length} items`);
+                            resolve(result);
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error getting all from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
+                } catch (e) {
+                    debugLog('DB getAll error:', e);
+                    return [];
+                }
+            },
+            
+            async delete(store, key) {
+                try {
+                    debugLog(`Deleting from ${store}:`, key);
+                    const db = await initDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(store, 'readwrite');
+                        const req = tx.objectStore(store).delete(key);
+                        
+                        req.onsuccess = () => {
+                            debugLog(`Deleted from ${store} successfully`);
+                            resolve();
+                        };
+                        
+                        req.onerror = () => {
+                            debugLog(`Error deleting from ${store}:`, req.error);
+                            reject(req.error);
+                        };
+                    });
+                } catch (e) {
+                    debugLog('DB delete error:', e);
+                }
+            }
+        };
+
+        function MusicPlayer() {
+            const [playlists, setPlaylists] = useState([]);
+            const [activePlaylist, setActivePlaylist] = useState(null);
+            const [view, setView] = useState('home');
+            const [currentSong, setCurrentSong] = useState(null);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [repeat, setRepeat] = useState(false);
+            const [progress, setProgress] = useState(0);
+            const [volume, setVolume] = useState(80);
+            const [darkMode, setDarkMode] = useState(true);
+            const [searchQuery, setSearchQuery] = useState('');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [showModal, setShowModal] = useState(null);
+            const [modalInput, setModalInput] = useState('');
+            const [loading, setLoading] = useState(true);
+            const [isOnline, setIsOnline] = useState(navigator.onLine);
+            const [contextMenu, setContextMenu] = useState(null);
+            const [draggedPlaylist, setDraggedPlaylist] = useState(null);
+            const [draggedSong, setDraggedSong] = useState(null);
+            const [recentPlaylistId, setRecentPlaylistId] = useState(null);
+            const [showDebug, setShowDebug] = useState(false);
+            const [debugInfo, setDebugInfo] = useState({});
+            const [editingPlaylist, setEditingPlaylist] = useState(null);
+            const [editingPlaylistName, setEditingPlaylistName] = useState('');
+            const [editingSong, setEditingSong] = useState(null);
+            const [editingSongName, setEditingSongName] = useState('');
+            
+            const audioRef = useRef(null);
+            const fileInputRef = useRef(null);
+            const saveTimeoutRef = useRef(null);
+            const longPressTimer = useRef(null);
+
+            const bg = darkMode ? 'bg-dark' : 'bg-light';
+            const sidebar = darkMode ? 'sidebar-dark' : 'sidebar-light';
+            const card = darkMode ? 'card-dark' : 'card-light';
+            const txtMuted = darkMode ? 'text-muted-dark' : 'text-muted-light';
+            const modalClass = darkMode ? 'modal-dark' : 'modal-light';
+
+            // Update debug info
+            useEffect(() => {
+                setDebugInfo({
+                    playlistCount: playlists.length,
+                    activePlaylist: activePlaylist ? 'Set' : 'None',
+                    loading: loading,
+                    isOnline: isOnline,
+                    currentSong: currentSong ? currentSong.name : 'None',
+                    lastUpdate: new Date().toLocaleTimeString()
+                });
+            }, [playlists, activePlaylist, loading, isOnline, currentSong]);
+
+            // Online/Offline detection
+            useEffect(() => {
+                const handleOnline = () => {
+                    debugLog('Network: Online');
+                    setIsOnline(true);
+                };
+                const handleOffline = () => {
+                    debugLog('Network: Offline');
+                    setIsOnline(false);
+                };
+                
+                window.addEventListener('online', handleOnline);
+                window.addEventListener('offline', handleOffline);
+                
+                return () => {
+                    window.removeEventListener('online', handleOnline);
+                    window.removeEventListener('offline', handleOffline);
+                };
+            }, []);
+
+            // Close context menu on click outside
+            useEffect(() => {
+                const handleClick = () => setContextMenu(null);
+                document.addEventListener('click', handleClick);
+                return () => document.removeEventListener('click', handleClick);
+            }, []);
+
+            // FIXED: Load data with proper async/await
+            useEffect(() => { 
+                loadData(); 
+            }, []);
+
+            const loadData = async () => {
+                try {
+                    debugLog('=== STARTING DATA LOAD ===');
+                    setLoading(true);
                     
-                    const result = await firebaseAuth.getRedirectResult();
-                    console.log('📥 Redirect result:', result);
+                    // Wait for all data to load
+                    const [lists, mode, vol, recent] = await Promise.all([
+                        DB.getAll('playlists'),
+                        DB.get('settings', 'darkMode'),
+                        DB.get('settings', 'volume'),
+                        DB.get('settings', 'recentPlaylist')
+                    ]);
                     
-                    if (result && result.user) {
-                        console.log('✅ REDIRECT SIGN-IN SUCCESSFUL!');
-                        console.log('✅ User UID:', result.user.uid);
-                        console.log('✅ User email:', result.user.email);
-                        console.log('✅ User name:', result.user.displayName);
-                        
-                        setFirebaseUser(result.user);
-                        
-                        // Clear the sign-in flag
-                        localStorage.removeItem('firebaseSignInInitiated');
-                        
-                        setDebugInfo(prev => ({
-                            ...prev,
-                            redirectSuccess: true,
-                            uid: result.user.uid,
-                            email: result.user.email,
-                            name: result.user.displayName
-                        }));
-                        
-                        alert(`✅ Sign-in successful!\n\nWelcome ${result.user.displayName}!`);
+                    debugLog('Loaded playlists:', lists.length);
+                    debugLog('Loaded darkMode:', mode?.value);
+                    debugLog('Loaded volume:', vol?.value);
+                    debugLog('Loaded recent:', recent?.value);
+                    
+                    // Set all state AFTER data is loaded
+                    if (lists && lists.length > 0) {
+                        setPlaylists(lists);
+                        const recentId = recent?.value || lists[0].id;
+                        setRecentPlaylistId(recentId);
+                        setActivePlaylist(recentId);
+                        debugLog('Set active playlist:', recentId);
                     } else {
-                        console.log('ℹ️ No redirect result');
-                        
-                        // Check if we were expecting a redirect
-                        const wasSigningIn = localStorage.getItem('firebaseSignInInitiated');
-                        if (wasSigningIn) {
-                            console.log('⚠️ Sign-in was initiated but no result returned');
-                            console.log('⚠️ User may have cancelled or error occurred');
-                            localStorage.removeItem('firebaseSignInInitiated');
-                        }
-                        
-                        setDebugInfo(prev => ({
-                            ...prev,
-                            noRedirectResult: true
-                        }));
+                        debugLog('No playlists found');
+                        setPlaylists([]);
+                        setActivePlaylist(null);
+                        setRecentPlaylistId(null);
                     }
-                } catch (error) {
-                    console.error('❌ Redirect result error:', error);
-                    console.error('Error code:', error.code);
-                    console.error('Error message:', error.message);
                     
-                    setDebugInfo(prev => ({
-                        ...prev,
-                        redirectError: error.message,
-                        errorCode: error.code
-                    }));
+                    if (mode) setDarkMode(mode.value);
+                    if (vol) setVolume(vol.value);
                     
-                    // Clear the sign-in flag on error
-                    localStorage.removeItem('firebaseSignInInitiated');
+                    debugLog('=== DATA LOAD COMPLETE ===');
+                } catch (e) {
+                    debugLog('Load error:', e);
+                    alert('Error loading data: ' + e.message);
                 } finally {
-                    setCheckingRedirect(false);
+                    // Small delay to ensure everything is rendered
+                    setTimeout(() => {
+                        setLoading(false);
+                        debugLog('Loading state set to false');
+                    }, 300);
+                }
+            };
+
+            // FIXED: Debounced save for playlists
+            useEffect(() => {
+                if (loading) return;
+                
+                debugLog('Playlist changed, scheduling save...');
+                
+                // Clear previous timeout
+                if (saveTimeoutRef.current) {
+                    clearTimeout(saveTimeoutRef.current);
+                }
+                
+                // Save after 500ms of no changes
+                saveTimeoutRef.current = setTimeout(async () => {
+                    debugLog('Saving all playlists...');
+                    for (const p of playlists) {
+                        await DB.save('playlists', p);
+                    }
+                    debugLog('All playlists saved');
+                }, 500);
+                
+                return () => {
+                    if (saveTimeoutRef.current) {
+                        clearTimeout(saveTimeoutRef.current);
+                    }
+                };
+            }, [playlists, loading]);
+
+            useEffect(() => {
+                if (!loading) DB.save('settings', { key: 'darkMode', value: darkMode });
+            }, [darkMode, loading]);
+
+            useEffect(() => {
+                if (!loading) DB.save('settings', { key: 'volume', value: volume });
+            }, [volume, loading]);
+
+            useEffect(() => {
+                if (!loading && activePlaylist) {
+                    DB.save('settings', { key: 'recentPlaylist', value: activePlaylist });
+                    setRecentPlaylistId(activePlaylist);
+                }
+            }, [activePlaylist, loading]);
+
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    audioRef.current.src = currentSong.url;
+                    audioRef.current.load();
+                    if (isPlaying) audioRef.current.play().catch(() => setIsPlaying(false));
+                }
+            }, [currentSong]);
+
+            useEffect(() => {
+                if (audioRef.current && currentSong) {
+                    if (isPlaying) audioRef.current.play().catch(() => setIsPlaying(false));
+                    else audioRef.current.pause();
+                }
+            }, [isPlaying]);
+
+            useEffect(() => {
+                if (audioRef.current) audioRef.current.volume = volume / 100;
+            }, [volume]);
+
+            const createPlaylist = () => {
+                setModalInput('');
+                setShowModal('create');
+            };
+
+            const goToHome = () => {
+                setView('home');
+                setSidebarOpen(false);
+            };
+
+            const openPlaylist = (id) => {
+                setActivePlaylist(id);
+                setView('playlist');
+                setSidebarOpen(false);
+            };
+
+            const handleCreate = async () => {
+                if (modalInput.trim()) {
+                    debugLog('Creating playlist:', modalInput);
+                    const id = Date.now();
+                    const newPlaylist = { id, name: modalInput.trim(), songs: [] };
+                    await DB.save('playlists', newPlaylist);
+                    setPlaylists([...playlists, newPlaylist]);
+                    openPlaylist(id);
+                    setShowModal(null);
+                    debugLog('Playlist created and saved');
+                }
+            };
+
+            const duplicatePlaylist = async (playlist) => {
+                debugLog('Duplicating playlist:', playlist.name);
+                const id = Date.now();
+                const newPlaylist = { 
+                    id, 
+                    name: `${playlist.name} (Copy)`, 
+                    songs: [...playlist.songs] 
+                };
+                
+                // Save immediately
+                await DB.save('playlists', newPlaylist);
+                
+                setPlaylists([...playlists, newPlaylist]);
+                setContextMenu(null);
+                
+                debugLog('Playlist duplicated and saved');
+            };
+
+            const deletePlaylist = async (id) => {
+                debugLog('Deleting playlist:', id);
+                const p = playlists.find(x => x.id === id);
+                if (p) {
+                    for (const s of p.songs) {
+                        if (!s.isUrl) await DB.delete('songs', s.id);
+                    }
+                    await DB.delete('playlists', id);
+                }
+                
+                const newPlaylists = playlists.filter(x => x.id !== id);
+                setPlaylists(newPlaylists);
+                
+                if (activePlaylist === id) {
+                    setActivePlaylist(newPlaylists.length > 0 ? newPlaylists[0].id : null);
+                }
+                
+                setContextMenu(null);
+                setShowModal(null);
+                
+                debugLog('Playlist deleted');
+            };
+
+            const handleFileUpload = async (e) => {
+                if (!activePlaylist) {
+                    alert('Please select a playlist first');
+                    return;
+                }
+                
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+                
+                debugLog('Uploading files:', files.length);
+                
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (!playlist) return;
+
+                for (const file of files) {
+                    debugLog('Processing file:', file.name);
+                    const id = Date.now() + Math.random();
+                    const song = { 
+                        id, 
+                        name: file.name.replace(/\.[^/.]+$/, ''), 
+                        isUrl: false 
+                    };
+                    await DB.save('songs', { id, blob: file });
+                    playlist.songs.push(song);
+                }
+                
+                // Save playlist immediately
+                await DB.save('playlists', playlist);
+                
+                setPlaylists([...playlists]);
+                
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+                
+                debugLog('Files uploaded and saved');
+            };
+
+            const handleUrlSubmit = async () => {
+                if (!modalInput.trim() || !activePlaylist) return;
+                
+                try { 
+                    new URL(modalInput); 
+                } catch { 
+                    alert('Invalid URL. Please enter a valid audio URL.');
+                    return; 
+                }
+                
+                debugLog('Adding URL:', modalInput);
+                
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (!playlist) return;
+                
+                const filename = modalInput.split('/').pop().split('?')[0] || 'Audio';
+                playlist.songs.push({
+                    id: Date.now() + Math.random(),
+                    name: filename.replace(/\.[^/.]+$/, ''),
+                    url: modalInput,
+                    isUrl: true
+                });
+                
+                // Save playlist immediately
+                await DB.save('playlists', playlist);
+                
+                setPlaylists([...playlists]);
+                setModalInput('');
+                setShowModal(null);
+                
+                debugLog('URL added and saved');
+            };
+
+            const playSong = async (song, pid) => {
+                if (song.isUrl) {
+                    setCurrentSong({ ...song, playlistId: pid });
+                } else {
+                    const data = await DB.get('songs', song.id);
+                    if (data?.blob) {
+                        const url = URL.createObjectURL(data.blob);
+                        setCurrentSong({ ...song, playlistId: pid, url });
+                    }
+                }
+                setIsPlaying(true);
+            };
+
+            const playNext = () => {
+                if (!currentSong) return;
+                const p = playlists.find(x => x.id === currentSong.playlistId);
+                if (p && p.songs.length > 0) {
+                    const idx = p.songs.findIndex(s => s.id === currentSong.id);
+                    const nextIdx = (idx + 1) % p.songs.length;
+                    playSong(p.songs[nextIdx], p.id);
+                }
+            };
+
+            const playPrevious = () => {
+                if (!currentSong) return;
+                const p = playlists.find(x => x.id === currentSong.playlistId);
+                if (p && p.songs.length > 0) {
+                    const idx = p.songs.findIndex(s => s.id === currentSong.id);
+                    const prevIdx = idx === 0 ? p.songs.length - 1 : idx - 1;
+                    playSong(p.songs[prevIdx], p.id);
+                }
+            };
+
+            const deleteSong = async (id, pid) => {
+                debugLog('Deleting song:', id);
+                const p = playlists.find(x => x.id === pid);
+                if (p) {
+                    const s = p.songs.find(x => x.id === id);
+                    if (s && !s.isUrl) await DB.delete('songs', s.id);
+                    p.songs = p.songs.filter(x => x.id !== id);
+                    
+                    // Save playlist immediately
+                    await DB.save('playlists', p);
+                    
+                    setPlaylists([...playlists]);
+                }
+                setShowModal(null);
+                debugLog('Song deleted');
+            };
+
+            const exportData = () => {
+                const blob = new Blob([JSON.stringify(playlists, null, 2)], { 
+                    type: 'application/json' 
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `music-backup-${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const importData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (Array.isArray(data)) {
+                            // Save all imported playlists immediately
+                            for (const playlist of data) {
+                                await DB.save('playlists', playlist);
+                            }
+                            setPlaylists([...playlists, ...data]);
+                        }
+                    } catch { 
+                        alert('Invalid backup file'); 
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const startEditingPlaylist = (playlist) => {
+                setEditingPlaylist(playlist.id);
+                setEditingPlaylistName(playlist.name);
+            };
+
+            const saveEditingPlaylist = async () => {
+                if (!editingPlaylist || !editingPlaylistName.trim()) {
+                    setEditingPlaylist(null);
+                    return;
+                }
+                
+                const playlist = playlists.find(p => p.id === editingPlaylist);
+                if (playlist) {
+                    playlist.name = editingPlaylistName.trim();
+                    await DB.save('playlists', playlist);
+                    setPlaylists([...playlists]);
+                    debugLog('Playlist name updated:', editingPlaylistName);
+                }
+                
+                setEditingPlaylist(null);
+                setEditingPlaylistName('');
+            };
+
+            const cancelEditingPlaylist = () => {
+                setEditingPlaylist(null);
+                setEditingPlaylistName('');
+            };
+
+            const handlePlaylistLongPressStart = (playlist) => {
+                longPressTimer.current = setTimeout(() => {
+                    startEditingPlaylist(playlist);
+                }, 500);
+            };
+
+            const handlePlaylistLongPressEnd = () => {
+                if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                }
+            };
+
+            const startEditingSong = (song) => {
+                setEditingSong(song.id);
+                setEditingSongName(song.name);
+            };
+
+            const saveEditingSong = async () => {
+                if (!editingSong || !editingSongName.trim()) {
+                    setEditingSong(null);
+                    return;
+                }
+                
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (playlist) {
+                    const song = playlist.songs.find(s => s.id === editingSong);
+                    if (song) {
+                        song.name = editingSongName.trim();
+                        await DB.save('playlists', playlist);
+                        setPlaylists([...playlists]);
+                        debugLog('Song name updated:', editingSongName);
+                    }
+                }
+                
+                setEditingSong(null);
+                setEditingSongName('');
+            };
+
+            const cancelEditingSong = () => {
+                setEditingSong(null);
+                setEditingSongName('');
+            };
+
+            const handleSongLongPressStart = (song) => {
+                longPressTimer.current = setTimeout(() => {
+                    startEditingSong(song);
+                }, 500);
+            };
+
+            const handleSongLongPressEnd = () => {
+                if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                }
+            };
+
+            const formatTime = (s) => {
+                if (!s || isNaN(s)) return '0:00';
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return `${m}:${sec.toString().padStart(2, '0')}`;
+            };
+
+            // Drag and drop for playlists
+            const handlePlaylistDragStart = (e, index) => {
+                setDraggedPlaylist(index);
+                e.dataTransfer.effectAllowed = 'move';
+            };
+
+            const handlePlaylistDragOver = (e, index) => {
+                e.preventDefault();
+                if (draggedPlaylist === null || draggedPlaylist === index) return;
+                
+                const newPlaylists = [...playlists];
+                const draggedItem = newPlaylists[draggedPlaylist];
+                newPlaylists.splice(draggedPlaylist, 1);
+                newPlaylists.splice(index, 0, draggedItem);
+                
+                setPlaylists(newPlaylists);
+                setDraggedPlaylist(index);
+            };
+
+            const handlePlaylistDragEnd = () => {
+                setDraggedPlaylist(null);
+            };
+
+            // Drag and drop for songs
+            const handleSongDragStart = (e, index) => {
+                setDraggedSong(index);
+                e.dataTransfer.effectAllowed = 'move';
+            };
+
+            const handleSongDragOver = (e, index) => {
+                e.preventDefault();
+                
+                // For touch drag, use touchDragIndex; for mouse drag, use draggedSong
+                const currentDragIndex = touchDragIndex !== null ? touchDragIndex : draggedSong;
+                
+                if (currentDragIndex === null || currentDragIndex === index) {
+                    console.log('Skipping - already at this position or not dragging');
+                    return;
+                }
+                
+                console.log('handleSongDragOver executing: moving from', currentDragIndex, 'to', index);
+                
+                const playlist = playlists.find(p => p.id === activePlaylist);
+                if (!playlist) return;
+                
+                const newSongs = [...playlist.songs];
+                const draggedItem = newSongs[currentDragIndex];
+                newSongs.splice(currentDragIndex, 1);
+                newSongs.splice(index, 0, draggedItem);
+                
+                playlist.songs = newSongs;
+                setPlaylists([...playlists]);
+                setDraggedSong(index);
+                
+                console.log('Reorder complete - new song order:', newSongs.map(s => s.name));
+            };
+
+            const handleSongDragEnd = async () => {
+                // Save the reordered playlist to database
+                if (draggedSong !== null && activePlaylist) {
+                    const playlist = playlists.find(p => p.id === activePlaylist);
+                    if (playlist) {
+                        await DB.save('playlists', playlist);
+                        debugLog('Song order saved to DB');
+                    }
+                }
+                setDraggedSong(null);
+            };
+            
+            // Touch drag for mobile
+            const [touchDragY, setTouchDragY] = useState(null);
+            const [touchDragIndex, setTouchDragIndex] = useState(null);
+            const dragHandleTimer = useRef(null);
+            const [isDraggingTouch, setIsDraggingTouch] = useState(false);
+            
+            const handleSongTouchStart = (e, index) => {
+                e.preventDefault(); // Prevent text selection
+                console.log('Touch start on song index:', index);
+                const touch = e.touches[0];
+                setTouchDragY(touch.clientY);
+                
+                // Store reference to the touched element
+                const touchedElement = e.currentTarget.parentElement;
+                
+                // Long-press timer: wait 300ms before enabling drag (reduced from 500ms)
+                dragHandleTimer.current = setTimeout(() => {
+                    console.log('Long press activated! Starting drag for index:', index);
+                    
+                    // Add visual feedback immediately via DOM
+                    touchedElement.style.opacity = '0.5';
+                    touchedElement.style.transform = 'scale(1.02)';
+                    
+                    setTouchDragIndex(index);
+                    setDraggedSong(index);
+                    setIsDraggingTouch(true);
+                }, 300);
+            };
+            
+            const handleSongTouchMove = (e, index) => {
+                console.log('TouchMove fired! isDraggingTouch:', isDraggingTouch, 'touchDragIndex:', touchDragIndex);
+                
+                if (!isDraggingTouch || touchDragIndex === null) {
+                    // Cancel long-press if user moves before 300ms
+                    if (dragHandleTimer.current) {
+                        clearTimeout(dragHandleTimer.current);
+                        console.log('Cancelled long-press because moved too early');
+                    }
+                    return;
+                }
+                
+                console.log('Touch move - ACTIVE DRAG');
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                const fingerY = touch.clientY;
+                
+                // Find which song item the finger is currently over
+                const songElements = document.querySelectorAll('.song-item');
+                let targetIndex = touchDragIndex; // Default to current position
+                
+                console.log('Found', songElements.length, 'song items');
+                
+                songElements.forEach((element, idx) => {
+                    const rect = element.getBoundingClientRect();
+                    const itemMiddle = rect.top + rect.height / 2;
+                    
+                    // If finger is over this item's middle point
+                    if (fingerY >= rect.top && fingerY <= rect.bottom) {
+                        targetIndex = idx;
+                        console.log('Finger over item', idx, 'at Y:', fingerY);
+                    }
+                });
+                
+                console.log('Target index:', targetIndex, 'Current drag index:', touchDragIndex);
+                console.log('Are they different?', targetIndex !== touchDragIndex);
+                console.log('Target >= 0?', targetIndex >= 0);
+                console.log('Current songs length:', current?.songs?.length);
+                console.log('Target < length?', targetIndex < current?.songs.length);
+                
+                // If finger moved to a different position, reorder
+                if (targetIndex !== touchDragIndex && targetIndex >= 0 && targetIndex < current?.songs.length) {
+                    console.log('âœ… ALL CONDITIONS MET! Reordering from', touchDragIndex, 'to', targetIndex);
+                    handleSongDragOver(e, targetIndex);
+                    setTouchDragIndex(targetIndex);
+                } else {
+                    console.log('âŒ Reorder blocked. targetIndex:', targetIndex, 'touchDragIndex:', touchDragIndex, 'songs.length:', current?.songs?.length);
                 }
             };
             
-            handleRedirectResult();
-        }, []);
-        
-        // Listen to auth state changes
-        useEffect(() => {
-            if (!isFirebaseConfigured || !firebaseAuth) {
-                return;
-            }
-            
-            const unsubscribe = firebaseAuth.onAuthStateChanged((user) => {
-                console.log('🔔 Auth state changed:', user ? `User: ${user.uid}` : 'No user');
-                
-                if (user) {
-                    console.log('✅ Firebase user detected');
-                    console.log('   UID:', user.uid);
-                    console.log('   Email:', user.email);
-                    console.log('   Display Name:', user.displayName);
-                    console.log('   Is Anonymous:', user.isAnonymous);
-                    
-                    if (!user.isAnonymous) {
-                        setFirebaseUser(user);
-                        setDebugInfo(prev => ({
-                            ...prev,
-                            authStateUser: true,
-                            uid: user.uid,
-                            email: user.email,
-                            isAnonymous: false
-                        }));
-                    } else {
-                        console.log('⚠️ User is anonymous - not setting');
-                        setDebugInfo(prev => ({
-                            ...prev,
-                            authStateUser: true,
-                            isAnonymous: true
-                        }));
-                    }
-                } else {
-                    console.log('❌ No Firebase user');
-                    setFirebaseUser(null);
-                    setDebugInfo(prev => ({
-                        ...prev,
-                        authStateUser: false
-                    }));
+            const handleSongTouchEnd = () => {
+                if (dragHandleTimer.current) {
+                    clearTimeout(dragHandleTimer.current);
                 }
                 
-                setLoading(false);
-            });
+                // Remove visual feedback from all items
+                document.querySelectorAll('.song-item').forEach(el => {
+                    el.style.opacity = '';
+                    el.style.transform = '';
+                });
+                
+                setTouchDragY(null);
+                setTouchDragIndex(null);
+                setIsDraggingTouch(false);
+                handleSongDragEnd();
+            };
+
+            const current = playlists.find(p => p.id === activePlaylist);
+            const recentPlaylist = playlists.find(p => p.id === recentPlaylistId);
+            const filtered = playlists.filter(p => 
+                p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.songs.some(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            );
+
+            // FIXED: Better loading state
+            if (loading) {
+                return React.createElement('div', { className: 'loading-overlay' },
+                    React.createElement('div', { className: 'spinner' }),
+                    React.createElement('div', { style: { marginTop: '20px', fontSize: '18px' } }, 'Loading your library...'),
+                    React.createElement('div', { style: { marginTop: '8px', fontSize: '14px', opacity: 0.7 } }, 'Please wait')
+                );
+            }
+
+            // Welcome screen for first-time users
+            if (playlists.length === 0 && !showModal) {
+                return React.createElement('div', { className: bg, style: { height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' } },
+                    React.createElement('div', { style: { textAlign: 'center', maxWidth: '500px' } },
+                        React.createElement('div', { className: 'text-3xl font-bold mb-4', className: 'text-color' }, 'Welcome to Music Player'),
+                        React.createElement('div', { className: `mb-6 ${txtMuted}`, style: { fontSize: '16px', lineHeight: '1.6' } }, 
+                            'Create your first playlist to start organizing your dharma instrument recordings and practice sessions.'
+                        ),
+                        React.createElement('button', { onClick: createPlaylist, className: 'btn-primary' }, 'Create Your First Playlist')
+                    )
+                );
+            }
             
-            return () => unsubscribe();
-        }, []);
-        
-        // Update debug info
-        useEffect(() => {
-            setDebugInfo(prev => ({
-                ...prev,
-                timestamp: new Date().toLocaleTimeString(),
-                firebaseConfigured: isFirebaseConfigured,
-                hasFirebaseUser: !!firebaseUser,
-                userAgent: navigator.userAgent,
-                isSafari: /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
-                isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-            }));
-        }, [firebaseUser]);
-        
-        if (loading || checkingRedirect) {
-            return React.createElement('div', { className: 'loading-overlay' },
-                React.createElement('div', { className: 'spinner' }),
-                React.createElement('div', { style: { marginTop: '20px', fontSize: '18px' } }, 
-                    checkingRedirect ? 'Checking for sign-in...' : 'Loading...'
+            // Show modal even if no playlists
+            if (playlists.length === 0 && showModal === 'create') {
+                return React.createElement('div', { className: bg, style: { height: '100vh' } },
+                    // Create Playlist Modal
+                    React.createElement('div', { 
+                        className: 'modal-overlay',
+                        onClick: (e) => {
+                            if (e.target === e.currentTarget) setShowModal(null);
+                        }
+                    },
+                        React.createElement('div', { className: `modal ${modalClass}` },
+                            React.createElement('div', { 
+                                className: 'text-2xl font-bold mb-4' 
+                            }, 'Create Your First Playlist'),
+                            React.createElement('input', {
+                                type: 'text',
+                                value: modalInput,
+                                onChange: (e) => setModalInput(e.target.value),
+                                placeholder: 'Playlist name',
+                                className: 'mb-4',
+                                onKeyPress: (e) => e.key === 'Enter' && handleCreate(),
+                                autoFocus: true,
+                                style: {
+                                    background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)',
+                                    border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+                                    color: darkMode ? '#fff' : '#1a1a1a'
+                                }
+                            }),
+                            React.createElement('div', { 
+                                className: 'flex gap-3', 
+                                style: { justifyContent: 'flex-end' } 
+                            },
+                                React.createElement('button', { 
+                                    onClick: () => setShowModal(null), 
+                                    className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                                }, 'Cancel'),
+                                React.createElement('button', { 
+                                    onClick: handleCreate, 
+                                    className: 'btn-primary' 
+                                }, 'Create')
+                            )
+                        )
+                    )
+                );
+            }
+
+            return React.createElement('div', null,
+                // Offline banner
+                !isOnline && React.createElement('div', { className: 'offline-banner' },
+                    'Offline Mode - Only local songs available'
                 ),
-                React.createElement('div', { style: { marginTop: '8px', fontSize: '14px', opacity: 0.7 } }, 
-                    'Please wait'
+                
+                // Audio element
+                React.createElement('audio', {
+                    ref: audioRef,
+                    onTimeUpdate: (e) => {
+                        if (e.target.duration) {
+                            setProgress((e.target.currentTime / e.target.duration) * 100);
+                        }
+                    },
+                    onEnded: () => {
+                        console.log('ðŸŽµ Song ended. Repeat state:', repeat);
+                        console.log('audioRef.current exists?', !!audioRef.current);
+                        
+                        if (repeat) {
+                            console.log('âœ… Repeat is enabled, attempting to replay...');
+                            
+                            // Mobile-friendly repeat: handle play promise
+                            if (audioRef.current) {
+                                console.log('Setting currentTime to 0');
+                                audioRef.current.currentTime = 0;
+                                
+                                console.log('Calling play()...');
+                                const playPromise = audioRef.current.play();
+                                
+                                console.log('Play promise:', playPromise);
+                                
+                                if (playPromise !== undefined) {
+                                    playPromise
+                                        .then(() => {
+                                            console.log('âœ… Play succeeded!');
+                                        })
+                                        .catch(err => {
+                                            console.log('âŒ Repeat play error (mobile):', err);
+                                            // Try again after a brief delay for mobile
+                                            setTimeout(() => {
+                                                console.log('Retrying play after delay...');
+                                                if (audioRef.current) {
+                                                    audioRef.current.play()
+                                                        .then(() => console.log('âœ… Retry succeeded!'))
+                                                        .catch(e => console.log('âŒ Retry failed:', e));
+                                                }
+                                            }, 100);
+                                        });
+                                }
+                            } else {
+                                console.log('âŒ audioRef.current is null!');
+                            }
+                        } else {
+                            console.log('Repeat is OFF, calling playNext()');
+                            playNext();
+                        }
+                    }
+                }),
+                
+                // File input - iOS FIXED
+                React.createElement('input', {
+                    ref: fileInputRef,
+                    type: 'file',
+                    multiple: true,
+                    accept: 'audio/*,.mp3,.m4a,.wav,.aac,.flac,.ogg,.mp4',
+                    onChange: handleFileUpload,
+                    style: { display: 'none' }
+                }),
+                
+                // Overlay for mobile sidebar
+                React.createElement('div', { 
+                    className: `overlay ${sidebarOpen ? 'open' : ''}`, 
+                    onClick: () => setSidebarOpen(false) 
+                }),
+                
+                // Context Menu
+                contextMenu && React.createElement('div', {
+                    className: 'context-menu',
+                    style: { top: contextMenu.y, left: contextMenu.x },
+                    onClick: (e) => e.stopPropagation()
+                },
+                    React.createElement('div', {
+                        className: 'context-menu-item',
+                        onClick: () => duplicatePlaylist(contextMenu.playlist)
+                    },
+                        React.createElement(Icons.Copy),
+                        'Duplicate'
+                    ),
+                    React.createElement('div', {
+                        className: 'context-menu-item',
+                        onClick: () => {
+                            setShowModal({ type: 'delete-playlist', id: contextMenu.playlist.id });
+                            setContextMenu(null);
+                        }
+                    },
+                        React.createElement(Icons.Trash),
+                        'Delete'
+                    )
+                ),
+                
+                // Main Container
+                React.createElement('div', { className: `container ${bg}` },
+                    // Sidebar
+                    React.createElement('div', { 
+                        className: `sidebar ${sidebar} ${sidebarOpen ? 'open' : ''}` 
+                    },
+                        // Header with theme toggle
+                        React.createElement('div', { 
+                            className: 'flex items-center justify-between' 
+                        },
+                            React.createElement('button', {
+                                onClick: goToHome,
+                                className: 'btn-secondary',
+                                style: { display: 'flex', alignItems: 'center', gap: '8px' }
+                            },
+                                React.createElement(Icons.Home),
+                                React.createElement('span', {}, 'Home')
+                            ),
+                            React.createElement('button', {
+                                onClick: () => setDarkMode(!darkMode),
+                                className: `icon-btn icon-btn-small`,
+                                'aria-label': 'Toggle theme'
+                            }, darkMode ? React.createElement(Icons.Sun) : React.createElement(Icons.Moon))
+                        ),
+                        
+                        React.createElement('button', { 
+                            onClick: createPlaylist, 
+                            className: 'btn-primary' 
+                        }, 'Create Playlist'),
+                        
+                        React.createElement('button', { 
+                            onClick: () => setShowModal('export'), 
+                            className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                        }, 'Backup & Share'),
+                        
+                        // Search
+                        React.createElement('input', {
+                            type: 'search',
+                            placeholder: 'Search...',
+                            value: searchQuery,
+                            onChange: (e) => setSearchQuery(e.target.value)
+                        }),
+                        
+                        // Playlist list
+                        React.createElement('div', { style: { flex: 1, overflowY: 'auto' } },
+                            React.createElement('div', { 
+                                className: `text-xs font-bold mb-2`, 
+                                style: { 
+                                    textTransform: 'uppercase', 
+                                    letterSpacing: '0.05em',
+                                    color: '#b3b3b3'
+                                } 
+                            }, 'Your Library'),
+                            
+                            filtered.length === 0 && React.createElement('div', {
+                                className: `text-sm ${txtMuted}`,
+                                style: { padding: '20px 0', textAlign: 'center' }
+                            }, searchQuery ? 'No results found' : 'No playlists yet'),
+                            
+                            filtered.map((p, index) => React.createElement('div', {
+                                key: p.id,
+                                draggable: true,
+                                onDragStart: (e) => handlePlaylistDragStart(e, index),
+                                onDragOver: (e) => handlePlaylistDragOver(e, index),
+                                onDragEnd: handlePlaylistDragEnd,
+                                className: `playlist-item ${card} ${activePlaylist === p.id ? 'active' : ''} ${draggedPlaylist === index ? 'dragging' : ''}`,
+                                style: { position: 'relative' }
+                            },
+                                React.createElement('div', { className: 'drag-handle' }, React.createElement(Icons.GripVertical)),
+                                React.createElement('div', { 
+                                    style: { flex: 1, minWidth: 0 },
+                                    onClick: () => openPlaylist(p.id)
+                                },
+                                    React.createElement('div', { 
+                                        className: 'font-bold truncate', 
+                                        style: { color: activePlaylist === p.id && view === 'playlist' ? PRIMARY : (darkMode ? '#ffffff' : '#000000') }
+                                    }, p.name),
+                                    React.createElement('div', { 
+                                        className: 'text-sm',
+                                        style: { color: darkMode ? '#b3b3b3' : '#666666' }
+                                    }, `${p.songs.length} tracks`)
+                                ),
+                                React.createElement('button', {
+                                    className: 'icon-btn icon-btn-small',
+                                    onClick: (e) => {
+                                        e.stopPropagation();
+                                        setContextMenu({
+                                            x: e.clientX,
+                                            y: e.clientY,
+                                            playlist: p
+                                        });
+                                    }
+                                }, React.createElement(Icons.MoreVertical))
+                            ))
+                        )
+                    ),
+                    
+                    // Main Content Area
+                    React.createElement('div', { className: 'main' },
+                        // Mobile header
+                        React.createElement('div', { className: `mobile-header ${card}` },
+                            React.createElement('button', { 
+                                onClick: () => setSidebarOpen(true),
+                                className: 'icon-btn icon-btn-small'
+                            }, React.createElement(Icons.Menu)),
+                            React.createElement('div', { 
+                                className: 'font-bold text-xl truncate',
+                                className: 'text-color'
+                            }, current?.name || 'Music Player')
+                        ),
+                        
+                        // Main content with grid + recent playlist
+                        React.createElement('div', { className: 'p-8' },
+                            // Playlist Grid
+                            React.createElement('div', { 
+                                className: 'mb-8',
+                                style: { display: view === 'home' ? 'block' : 'none' }
+                            },
+                                React.createElement('div', { 
+                                    className: 'text-2xl font-bold mb-4',
+                                    className: 'text-color'
+                                }, 'Your Playlists'),
+                                React.createElement('div', { className: 'playlist-grid' },
+                                    playlists.map(p => React.createElement('div', {
+                                        key: p.id,
+                                        onClick: () => openPlaylist(p.id),
+                                        className: `playlist-grid-card ${card}`,
+                                        style: { 
+                                            ...(activePlaylist === p.id ? { 
+                                                borderColor: PRIMARY,
+                                                borderWidth: '2px',
+                                                borderStyle: 'solid'
+                                            } : {})
+                                        }
+                                    },
+                                        React.createElement('button', {
+                                            className: 'grid-menu-btn icon-btn icon-btn-small',
+                                            onClick: (e) => {
+                                                e.stopPropagation();
+                                                setContextMenu({
+                                                    x: e.clientX - 160,
+                                                    y: e.clientY,
+                                                    playlist: p
+                                                });
+                                            }
+                                        }, React.createElement(Icons.MoreVertical)),
+                                        React.createElement('div', { 
+                                            style: { 
+                                                fontSize: '48px', 
+                                                marginBottom: '12px'
+                                            } 
+                                        }, React.createElement(Icons.Music)),
+                                        React.createElement('div', { 
+                                            className: 'font-bold truncate text-color',
+                                            style: { marginBottom: '4px' }
+                                        }, p.name),
+                                        React.createElement('div', { 
+                                            className: 'text-sm text-muted'
+                                        }, `${p.songs.length} tracks`)
+                                    ))
+                                )
+                            ),
+                            
+                            // Current/Recent Playlist View
+                            current && React.createElement('div', { 
+                                style: { display: view === 'playlist' ? 'block' : 'none' }
+                            },
+                                React.createElement('div', { className: 'flex items-center justify-between mb-6' },
+                                    React.createElement('div', { className: 'flex items-center gap-4', style: { flex: 1 } },
+                                        React.createElement('button', {
+                                            onClick: goToHome,
+                                            className: 'icon-btn',
+                                            title: 'Back to Home'
+                                        }, React.createElement(Icons.ArrowLeft)),
+                                        React.createElement('div', { style: { flex: 1 } },
+                                            editingPlaylist === current.id ?
+                                            React.createElement('input', {
+                                                type: 'text',
+                                                value: editingPlaylistName,
+                                                onChange: (e) => setEditingPlaylistName(e.target.value),
+                                                onKeyDown: (e) => {
+                                                    if (e.key === 'Enter') saveEditingPlaylist();
+                                                    if (e.key === 'Escape') cancelEditingPlaylist();
+                                                },
+                                                onBlur: saveEditingPlaylist,
+                                                autoFocus: true,
+                                                className: 'song-name-edit',
+                                                style: { fontSize: '30px', marginBottom: '8px' },
+                                                onClick: (e) => e.stopPropagation()
+                                            })
+                                        :
+                                            React.createElement('div', {
+                                                onTouchStart: () => handlePlaylistLongPressStart(current),
+                                                onTouchEnd: handlePlaylistLongPressEnd,
+                                                onTouchMove: handlePlaylistLongPressEnd
+                                            },
+                                                React.createElement('div', { 
+                                                    className: 'flex items-center gap-3 mb-2'
+                                                },
+                                                    React.createElement('div', {
+                                                        className: 'text-3xl font-bold text-color'
+                                                    }, current.name),
+                                                    React.createElement('button', {
+                                                        onClick: (e) => {
+                                                            e.stopPropagation();
+                                                            startEditingPlaylist(current);
+                                                        },
+                                                        className: 'icon-btn icon-btn-small',
+                                                        title: 'Edit playlist name'
+                                                    }, React.createElement(Icons.Edit))
+                                                ),
+                                                React.createElement('div', { 
+                                                    className: 'text-muted'
+                                                }, `${current.songs.length} tracks`)
+                                            )
+                                        )
+                                    ),
+                                    React.createElement('button', {
+                                        className: 'icon-btn',
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            setContextMenu({
+                                                x: e.clientX - 160,
+                                                y: e.clientY,
+                                                playlist: current
+                                            });
+                                        }
+                                    }, React.createElement(Icons.MoreVertical))
+                                ),
+                                
+                                // Action buttons
+                                React.createElement('div', { 
+                                    className: 'flex gap-4 mb-6',
+                                    style: { flexWrap: 'wrap' }
+                                },
+                                    React.createElement('button', { 
+                                        onClick: () => fileInputRef.current?.click(), 
+                                        className: 'btn-primary',
+                                        style: { display: 'flex', alignItems: 'center', gap: '8px' }
+                                    }, 
+                                        React.createElement(Icons.Upload),
+                                        'Add Songs'
+                                    ),
+                                    React.createElement('button', { 
+                                        onClick: () => { 
+                                            setModalInput(''); 
+                                            setShowModal('url'); 
+                                        }, 
+                                        className: 'btn-secondary',
+                                        style: { display: 'flex', alignItems: 'center', gap: '8px' }
+                                    }, 
+                                        React.createElement(Icons.Link),
+                                        'Add URL'
+                                    )
+                                ),
+                                
+                                // Song list - EDITABLE
+                                current.songs.length > 0 ? current.songs.map((s, i) => 
+                                    React.createElement('div', {
+                                        key: s.id,
+                                        draggable: editingSong !== s.id,
+                                        onDragStart: (e) => editingSong !== s.id && handleSongDragStart(e, i),
+                                        onDragOver: (e) => editingSong !== s.id && handleSongDragOver(e, i),
+                                        onDragEnd: handleSongDragEnd,
+                                        onClick: () => editingSong !== s.id && playSong(s, current.id),
+                                        className: `song-item ${card} ${currentSong?.id === s.id ? 'active' : ''} ${draggedSong === i ? 'dragging' : ''}`,
+                                        style: { 
+                                            marginBottom: '8px',
+                                            ...(currentSong?.id === s.id ? { background: `${PRIMARY}20` } : {})
+                                        }
+                                    },
+                                        React.createElement('div', { 
+                                            className: 'drag-handle',
+                                            onTouchStart: (e) => editingSong !== s.id && handleSongTouchStart(e, i),
+                                            onTouchMove: (e) => editingSong !== s.id && handleSongTouchMove(e, i),
+                                            onTouchEnd: handleSongTouchEnd
+                                        }, React.createElement(Icons.GripVertical)),
+                                        React.createElement('div', { style: { flex: 1, minWidth: 0 } },
+                                            editingSong === s.id ?
+                                                React.createElement('input', {
+                                                    type: 'text',
+                                                    value: editingSongName,
+                                                    onChange: (e) => setEditingSongName(e.target.value),
+                                                    onKeyDown: (e) => {
+                                                        if (e.key === 'Enter') saveEditingSong();
+                                                        if (e.key === 'Escape') cancelEditingSong();
+                                                    },
+                                                    onBlur: saveEditingSong,
+                                                    autoFocus: true,
+                                                    className: 'song-name-edit',
+                                                    onClick: (e) => e.stopPropagation()
+                                                })
+                                            :
+                                                React.createElement('div', null,
+                                                    React.createElement('div', { 
+                                                        className: 'font-bold truncate text-color', 
+                                                        style: currentSong?.id === s.id ? { color: PRIMARY } : {}
+                                                    }, s.name),
+                                                    React.createElement('div', { 
+                                                        className: 'text-sm text-muted'
+                                                    }, s.isUrl ? 'Streaming' : 'Local')
+                                                )
+                                        ),
+                                        editingSong !== s.id && React.createElement('button', {
+                                            onClick: (e) => {
+                                                e.stopPropagation();
+                                                startEditingSong(s);
+                                            },
+                                            className: 'icon-btn icon-btn-small',
+                                            title: 'Edit song name'
+                                        }, React.createElement(Icons.Edit)),
+                                        React.createElement('button', {
+                                            onClick: (e) => { 
+                                                e.stopPropagation(); 
+                                                setShowModal({ type: 'delete-song', id: s.id, pid: current.id }); 
+                                            },
+                                            className: 'icon-btn icon-btn-small',
+                                            style: { flexShrink: 0 }
+                                        }, React.createElement(Icons.Trash))
+                                    )
+                                ) : React.createElement('div', { 
+                                    style: { 
+                                        textAlign: 'center', 
+                                        padding: '80px 20px',
+                                        color: '#b3b3b3'
+                                    }
+                                },
+                                    React.createElement('div', { className: 'text-xl mb-2' }, 'No tracks yet'),
+                                    React.createElement('div', {}, 'Upload audio files or add streaming URLs')
+                                )
+                            )
+                        )
+                    )
+                ),
+                
+                // MODALS
+                
+                // Create Playlist Modal
+                showModal === 'create' && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: (e) => {
+                        if (e.target === e.currentTarget) setShowModal(null);
+                    }
+                },
+                    React.createElement('div', { className: `modal ${modalClass}` },
+                        React.createElement('div', { 
+                            className: 'text-2xl font-bold mb-4' 
+                        }, 'Create Playlist'),
+                        React.createElement('input', {
+                            type: 'text',
+                            value: modalInput,
+                            onChange: (e) => setModalInput(e.target.value),
+                            placeholder: 'Playlist name',
+                            className: 'mb-4',
+                            onKeyPress: (e) => e.key === 'Enter' && handleCreate(),
+                            autoFocus: true,
+                            style: {
+                                background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)',
+                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+                                color: darkMode ? '#fff' : '#1a1a1a'
+                            }
+                        }),
+                        React.createElement('div', { 
+                            className: 'flex gap-3', 
+                            style: { justifyContent: 'flex-end' } 
+                        },
+                            React.createElement('button', { 
+                                onClick: () => setShowModal(null), 
+                                className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                            }, 'Cancel'),
+                            React.createElement('button', { 
+                                onClick: handleCreate, 
+                                className: 'btn-primary' 
+                            }, 'Create')
+                        )
+                    )
+                ),
+                
+                // Add URL Modal
+                showModal === 'url' && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: (e) => {
+                        if (e.target === e.currentTarget) setShowModal(null);
+                    }
+                },
+                    React.createElement('div', { className: `modal ${modalClass}` },
+                        React.createElement('div', { 
+                            className: 'text-2xl font-bold mb-4' 
+                        }, 'Add Streaming URL'),
+                        React.createElement('input', {
+                            type: 'text',
+                            value: modalInput,
+                            onChange: (e) => setModalInput(e.target.value),
+                            placeholder: 'https://example.com/audio.mp3',
+                            className: 'mb-4',
+                            onKeyPress: (e) => e.key === 'Enter' && handleUrlSubmit(),
+                            autoFocus: true,
+                            style: {
+                                background: darkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)',
+                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+                                color: darkMode ? '#fff' : '#1a1a1a'
+                            }
+                        }),
+                        React.createElement('div', { 
+                            className: 'flex gap-3', 
+                            style: { justifyContent: 'flex-end' } 
+                        },
+                            React.createElement('button', { 
+                                onClick: () => setShowModal(null), 
+                                className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                            }, 'Cancel'),
+                            React.createElement('button', { 
+                                onClick: handleUrlSubmit, 
+                                className: 'btn-primary' 
+                            }, 'Add')
+                        )
+                    )
+                ),
+                
+                // Export/Import Modal
+                showModal === 'export' && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: (e) => {
+                        if (e.target === e.currentTarget) setShowModal(null);
+                    }
+                },
+                    React.createElement('div', { className: `modal ${modalClass}` },
+                        React.createElement('div', { 
+                            className: 'text-2xl font-bold mb-6' 
+                        }, 'Backup & Share'),
+                        React.createElement('button', { 
+                            onClick: () => { 
+                                exportData(); 
+                                setShowModal(null); 
+                            }, 
+                            className: 'btn-primary mb-4', 
+                            style: { width: '100%' } 
+                        }, 'Export Playlists'),
+                        React.createElement('input', { 
+                            type: 'file', 
+                            accept: '.json', 
+                            onChange: importData, 
+                            id: 'import-file', 
+                            style: { display: 'none' } 
+                        }),
+                        React.createElement('label', { 
+                            htmlFor: 'import-file', 
+                            className: 'btn-secondary mb-4', 
+                            style: { 
+                                width: '100%', 
+                                display: 'block', 
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                color: darkMode ? '#ffffff' : '#000000'
+                            } 
+                        }, 'Import Playlists'),
+                        React.createElement('button', { 
+                            onClick: () => setShowModal(null), 
+                            style: { 
+                                width: '100%', 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer', 
+                                padding: '12px',
+                                fontSize: '14px',
+                                color: '#b3b3b3'
+                            } 
+                        }, 'Close')
+                    )
+                ),
+                
+                // Delete Playlist Confirmation
+                showModal?.type === 'delete-playlist' && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: (e) => {
+                        if (e.target === e.currentTarget) setShowModal(null);
+                    }
+                },
+                    React.createElement('div', { className: `modal ${modalClass}` },
+                        React.createElement('div', { 
+                            className: 'text-xl font-bold mb-4' 
+                        }, 'Delete Playlist?'),
+                        React.createElement('div', { 
+                            className: `mb-6`,
+                            style: { color: '#b3b3b3' }
+                        }, 'This will delete all songs in this playlist. This action cannot be undone.'),
+                        React.createElement('div', { 
+                            className: 'flex gap-3', 
+                            style: { justifyContent: 'flex-end' } 
+                        },
+                            React.createElement('button', { 
+                                onClick: () => setShowModal(null), 
+                                className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                            }, 'Cancel'),
+                            React.createElement('button', { 
+                                onClick: () => deletePlaylist(showModal.id), 
+                                style: { 
+                                    background: '#dc2626', 
+                                    border: 'none', 
+                                    color: 'white', 
+                                    padding: '12px 28px', 
+                                    borderRadius: '50px', 
+                                    fontWeight: '600', 
+                                    cursor: 'pointer',
+                                    fontSize: '15px'
+                                } 
+                            }, 'Delete Playlist')
+                        )
+                    )
+                ),
+                
+                // Delete Song Confirmation Modal
+                showModal?.type === 'delete-song' && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: (e) => {
+                        if (e.target === e.currentTarget) setShowModal(null);
+                    }
+                },
+                    React.createElement('div', { className: `modal ${modalClass}` },
+                        React.createElement('div', { 
+                            className: 'text-xl font-bold mb-4' 
+                        }, 'Delete Track?'),
+                        React.createElement('div', { 
+                            className: `mb-6`,
+                            style: { color: '#b3b3b3' }
+                        }, 'This action cannot be undone.'),
+                        React.createElement('div', { 
+                            className: 'flex gap-3', 
+                            style: { justifyContent: 'flex-end' } 
+                        },
+                            React.createElement('button', { 
+                                onClick: () => setShowModal(null), 
+                                className: 'btn-secondary',
+                                style: { color: darkMode ? '#ffffff' : '#000000' }
+                            }, 'Cancel'),
+                            React.createElement('button', { 
+                                onClick: () => deleteSong(showModal.id, showModal.pid), 
+                                style: { 
+                                    background: '#dc2626', 
+                                    border: 'none', 
+                                    color: 'white', 
+                                    padding: '12px 28px', 
+                                    borderRadius: '50px', 
+                                    fontWeight: '600', 
+                                    cursor: 'pointer',
+                                    fontSize: '15px'
+                                } 
+                            }, 'Delete')
+                        )
+                    )
+                ),
+                
+                // PLAYER BAR (IMPROVED)
+                currentSong && React.createElement('div', { className: `player ${card}` },
+                    // Song info and time
+                    React.createElement('div', { 
+                        className: 'player-info'
+                    },
+                        React.createElement('div', { 
+                            className: 'font-bold truncate', 
+                            style: { 
+                                flex: 1, 
+                                minWidth: '120px',
+                                color: darkMode ? '#ffffff' : '#ffffff'
+                            } 
+                        }, currentSong.name),
+                        React.createElement('div', { 
+                            style: { 
+                                fontSize: '13px', 
+                                flexShrink: 0,
+                                color: darkMode ? '#b3b3b3' : '#ffffff'
+                            }
+                        }, formatTime(audioRef.current?.currentTime))
+                    ),
+                    
+                    // Progress bar
+                    React.createElement('div', {
+                        className: 'progress-bar',
+                        style: { marginBottom: '10px' },
+                        onClick: (e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const pos = (e.clientX - rect.left) / rect.width;
+                            if (audioRef.current && audioRef.current.duration) {
+                                audioRef.current.currentTime = pos * audioRef.current.duration;
+                            }
+                        }
+                    },
+                        React.createElement('div', { 
+                            className: 'progress-fill', 
+                            style: { width: `${progress}%` } 
+                        })
+                    ),
+                    
+                    // Controls layout
+                    React.createElement('div', { 
+                        className: 'player-main'
+                    },
+                        // Playback controls (centered)
+                        React.createElement('div', { className: 'player-controls' },
+                            React.createElement('button', {
+                                onClick: playPrevious,
+                                className: 'icon-btn',
+                                title: 'Previous'
+                            }, React.createElement(Icons.SkipBack)),
+                            React.createElement('button', {
+                                onClick: () => setIsPlaying(!isPlaying),
+                                className: 'icon-btn',
+                                style: { 
+                                    background: PRIMARY,
+                                    borderColor: PRIMARY
+                                },
+                                title: isPlaying ? 'Pause' : 'Play'
+                            }, isPlaying ? React.createElement(Icons.Pause) : React.createElement(Icons.Play)),
+                            React.createElement('button', {
+                                onClick: playNext,
+                                className: 'icon-btn',
+                                title: 'Next'
+                            }, React.createElement(Icons.SkipForward)),
+                            React.createElement('button', {
+                                onClick: () => setRepeat(!repeat),
+                                className: 'icon-btn',
+                                style: { 
+                                    opacity: repeat ? 1 : 0.5,
+                                    color: repeat ? PRIMARY : '#ffffff'
+                                },
+                                title: 'Repeat'
+                            }, React.createElement(Icons.Repeat))
+                        ),
+                        // Volume controls (desktop only)
+                        React.createElement('div', { 
+                            className: 'flex items-center gap-3 hide-mobile' 
+                        },
+                            React.createElement('div', {
+                                style: { color: darkMode ? '#ffffff' : '#ffffff' }
+                            }, React.createElement(Icons.Volume)),
+                            React.createElement('input', {
+                                type: 'range',
+                                min: 0,
+                                max: 100,
+                                value: volume,
+                                onChange: (e) => setVolume(Number(e.target.value)),
+                                style: { width: '100px' }
+                            }),
+                            React.createElement('span', { 
+                                style: { 
+                                    minWidth: '40px', 
+                                    fontSize: '14px', 
+                                    color: darkMode ? '#b3b3b3' : '#ffffff'
+                                }
+                            }, `${volume}%`)
+                        )
+                    )
                 )
             );
         }
-        
-        return React.createElement('div', { 
-            className: 'bg-dark',
-            style: { 
-                minHeight: '100vh', 
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-            } 
-        },
-            // Title
-            React.createElement('h1', { 
-                style: { 
-                    fontSize: '32px', 
-                    marginBottom: '20px',
-                    color: '#1DB954'
-                } 
-            }, 'Firebase Auth Test - v14 Safari Fix'),
-            
-            // Sign-in status
-            React.createElement('div', {
-                style: {
-                    padding: '20px',
-                    background: firebaseUser ? 'rgba(29, 185, 84, 0.2)' : 'rgba(220, 38, 38, 0.2)',
-                    border: `1px solid ${firebaseUser ? '#1DB954' : '#dc2626'}`,
-                    borderRadius: '12px',
-                    marginBottom: '20px',
-                    textAlign: 'center',
-                    minWidth: '300px'
-                }
-            },
-                React.createElement('div', { 
-                    style: { fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' } 
-                }, firebaseUser ? '✅ Signed In' : '❌ Not Signed In'),
-                
-                firebaseUser && React.createElement('div', { style: { fontSize: '14px' } },
-                    React.createElement('div', {}, `UID: ${firebaseUser.uid}`),
-                    React.createElement('div', {}, `Email: ${firebaseUser.email}`),
-                    React.createElement('div', {}, `Name: ${firebaseUser.displayName}`)
-                )
-            ),
-            
-            // Buttons
-            !firebaseUser ? (
-                React.createElement('button', {
-                    onClick: signInWithGoogle,
-                    className: 'btn-primary'
-                }, '🔐 Sign In with Google (Safari-Compatible)')
-            ) : (
-                React.createElement('button', {
-                    onClick: async () => {
-                        await firebaseAuth.signOut();
-                        setFirebaseUser(null);
-                        alert('✅ Signed out!');
-                    },
-                    className: 'btn-primary',
-                    style: { background: '#dc2626' }
-                }, '🚪 Sign Out')
-            ),
-            
-            // Debug panel
-            React.createElement('div', { className: 'debug-panel' },
-                React.createElement('div', { 
-                    style: { 
-                        fontSize: '16px', 
-                        fontWeight: 'bold', 
-                        marginBottom: '15px',
-                        color: '#1DB954'
-                    } 
-                }, '🔧 DEBUG INFO'),
-                
-                Object.entries(debugInfo).map(([key, value]) => 
-                    React.createElement('div', { 
-                        key: key,
-                        className: 'debug-item'
-                    }, `${key}: ${JSON.stringify(value)}`)
-                )
-            ),
-            
-            // Instructions
-            React.createElement('div', {
-                style: {
-                    marginTop: '30px',
-                    padding: '20px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    borderRadius: '12px',
-                    maxWidth: '600px',
-                    fontSize: '14px',
-                    lineHeight: '1.6'
-                }
-            },
-                React.createElement('div', { 
-                    style: { fontWeight: 'bold', marginBottom: '10px' } 
-                }, '📱 Safari Testing Instructions:'),
-                React.createElement('div', {}, '1. Click "Sign In with Google"'),
-                React.createElement('div', {}, '2. You will be redirected to Google'),
-                React.createElement('div', {}, '3. Sign in with your Google account'),
-                React.createElement('div', {}, '4. You will be redirected back to this page'),
-                React.createElement('div', {}, '5. Check if the status shows "✅ Signed In"'),
-                React.createElement('div', { style: { marginTop: '10px', opacity: 0.8 } }, 
-                    '⚠️ The page will reload after sign-in - this is normal!'
-                )
-            )
-        );
-    }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(TestApp));
-</script>
-
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(MusicPlayer));
+    </script>
 </body>
 </html>
