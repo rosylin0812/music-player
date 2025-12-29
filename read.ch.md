@@ -1,5 +1,4 @@
-###  [[English]](README.md)
-
+###  [[English]](README.md)  [[中文版本]](read.ch.md)
 # 梵唄練習專用播放器 (Fan Bai Music Player)
 連結：[https://fan-bai-player.vercel.app/](https://fan-bai-player.vercel.app/)
 
