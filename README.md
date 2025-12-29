@@ -1,4 +1,4 @@
-[[English]](README.md)
+###[[English]](README.md)
 ###  [[中文版本]](read.ch.md)
 
 ### Music Player for Fan Bai (Buddhist Chanting) Practice
