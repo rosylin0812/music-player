@@ -1,3 +1,7 @@
+[![en](img.shields.io)](README.md)
+[![es](img.shields.io)](README.es.md)
+
+
 ### 梵唄（佛教經咒撥放）練習專用播放器
 連結：https://fan-bai-player.vercel.app/
 
